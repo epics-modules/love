@@ -38,11 +38,12 @@
     support includes the ao, ai, bo, bi, and mbbi record types. The mapping
     between record and device support is as follows.
 
-    device(ai,   INST_IO, devAiAsynLove,   "devAsynLove")
-    device(ao,   INST_IO, devAoAsynLove,   "devAsynLove")
-    device(bi,   INST_IO, devBiAsynLove,   "devAsynLove")
-    device(bo,   INST_IO, devBoAsynLove,   "devAsynLove")
-    device(mbbi, INST_IO, devMbbiAsynLove, "devAsynLove")
+    device(ai,     INST_IO, devAiAsynLove,   "devAsynLove")
+    device(ao,     INST_IO, devAoAsynLove,   "devAsynLove")
+    device(bi,     INST_IO, devBiAsynLove,   "devAsynLove")
+    device(bo,     INST_IO, devBoAsynLove,   "devAsynLove")
+    device(mbbi,   INST_IO, devMbbiAsynLove, "devAsynLove")
+    device(longin, INST_IO, devLiAsynLove,   "devAsynLove")
 
     The "INST_IO" address type is used to indicate the format of the INP and
     OUT field in the database (.db) file. Both fields have a format that is
@@ -86,7 +87,7 @@
       MBBI    8       8       - Get Alarm type
       MBBI    9       9       - Get Input type
       BI     10      10       - Get Comm status
-      AI             11       - Get decimal points
+      LONGIN         11       - Get decimal points
       AO     11      12       - Put SP1 value
       AO     12      13       - Put SP2 value
       AO     13      14       - Put AlLo value
@@ -100,8 +101,8 @@
 
  Source control info:
     Modified by:    $Author: dkline $
-                    $Date: 2005-03-23 18:53:25 $
-                    $Revision: 1.6 $
+                    $Date: 2005-03-29 13:08:00 $
+                    $Revision: 1.7 $
 
  =============================================================================
  History:
@@ -279,29 +280,29 @@ typedef enum
 typedef enum
 {
                     /*         TABLE 2         */
-                    /* Rec   Cmd     Model     */
-                    /* Type  Num  1600  16A    */
+                    /*   Rec   Cmd     Model   */
+                    /*   Type  Num  1600   16A */
                     /* ----------------------- */
-    getValue,       /*   AI    0    00    00   */
-    getSP1,         /*   AI    1  0100  0101   */
-    getSP2,         /*   AI    2  0102  0105   */
-    getAlLo,        /*   AI    3  0104  0106   */
-    getAlHi,        /*   AI    4  0105  0107   */
-    getPeak,        /*   AI    5  011A  011D   */
-    getValley,      /*   AI    6  011B  011E   */
-    getAlStatus,    /*   BI    7    00    00   */
-    getAlMode,      /* MBBI    8  0337  031D   */
-    getInpType,     /* MBBI    9  0323  0317   */
-    getCommStatus,  /*   BI   10  032A  0324   */
-    getDecPt,       /*   AI   11  0324  031A   */
-    putSP1,         /*   AO   12  0200  0200   */
-    putSP2,         /*   AO   13  0202  0204   */
-    putAlLo,        /*   AO   14  0204  0207   */
-    putAlHi,        /*   AO   15  0205  0208   */
-    resetPeak,      /*   BO   16  0407  040A   */
-    resetValley,    /*   BO   17  0408  040B   */
-    setRemote,      /*   BO   18  0400  0400   */
-    setLocal,       /*   BO   19  0401  0401   */
+    getValue,       /*     AI    0    00    00 */
+    getSP1,         /*     AI    1  0100  0101 */
+    getSP2,         /*     AI    2  0102  0105 */
+    getAlLo,        /*     AI    3  0104  0106 */
+    getAlHi,        /*     AI    4  0105  0107 */
+    getPeak,        /*     AI    5  011A  011D */
+    getValley,      /*     AI    6  011B  011E */
+    getAlStatus,    /*     BI    7    00    00 */
+    getAlMode,      /*   MBBI    8  0337  031D */
+    getInpType,     /*   MBBI    9  0323  0317 */
+    getCommStatus,  /*     BI   10  032A  0324 */
+    getDecPt,       /* LONGIN   11  0324  031A */
+    putSP1,         /*     AO   12  0200  0200 */
+    putSP2,         /*     AO   13  0202  0204 */
+    putAlLo,        /*     AO   14  0204  0207 */
+    putAlHi,        /*     AO   15  0205  0208 */
+    resetPeak,      /*     BO   16  0407  040A */
+    resetValley,    /*     BO   17  0408  040B */
+    setRemote,      /*     BO   18  0400  0400 */
+    setLocal,       /*     BO   19  0401  0401 */
     maxCmd
 
 } eCmdType;
