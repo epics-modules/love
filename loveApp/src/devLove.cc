@@ -189,6 +189,7 @@ long DevAiLove::dev_init(void* v)
 {
     aiRecord* pr = (aiRecord*)v;
     DevLove* pDevLove = new DevAiLove((dbCommon*)pr,&(pr->inp));
+    pDevLove->bind();
     return(pDevLove->getStatus());
 }
 
@@ -196,6 +197,7 @@ long DevBiLove::dev_init(void* v)
 {
     biRecord* pr = (biRecord*)v;
     DevLove* pDevLove = new DevBiLove((dbCommon*)pr,&(pr->inp));
+    pDevLove->bind();
     return(pDevLove->getStatus());
 }
 
@@ -203,6 +205,7 @@ long DevMbbiLove::dev_init(void* v)
 {
     mbbiRecord* pr = (mbbiRecord*)v;
     DevLove* pDevLove = new DevMbbiLove((dbCommon*)pr,&(pr->inp));
+    pDevLove->bind();
     return(pDevLove->getStatus());
 }
 
@@ -210,6 +213,7 @@ long DevAoLove::dev_init(void* v)
 {
     aoRecord* pr = (aoRecord*)v;
     DevLove* pDevLove = new DevAoLove((dbCommon*)pr,&(pr->out));
+    pDevLove->bind();
     return(pDevLove->getStatus());
 }
 
@@ -217,6 +221,7 @@ long DevBoLove::dev_init(void* v)
 {
     boRecord* pr = (boRecord*)v;
     DevLove* pDevLove = new DevBoLove((dbCommon*)pr,&(pr->out));
+    pDevLove->bind();
     return(pDevLove->getStatus());
 }
 
