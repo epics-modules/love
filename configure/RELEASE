@@ -1,4 +1,7 @@
 #RELEASE Location of external products
-MPF=/home/oxygen/MOONEY/epics/synApps_5_0/support/mpf/2-4-2
-EPICS_BASE=/net/beams/export/local/epics/baseR3.14.5
+ASYN=/home/oxygen/DKLINE/EPICS/synApps/support/asyn/4-2
+IPAC=/home/oxygen/DKLINE/EPICS/synApps/support/ipac/2-8
+MPF=/home/oxygen/DKLINE/EPICS/synApps/support/mpf/2-4-2
+
+EPICS_BASE=/home/oxygen/DKLINE/EPICS/base
 
