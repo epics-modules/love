@@ -62,6 +62,11 @@ asynSetTraceMask( "L0", 0, 0x9 )
 asynSetTraceIOMask( "L0", 0, 0x1 )
 
 #-----------------------------------------------------------------------------
+# Love controllers port driver
+interposeLovelink( "L0", 0 )
+interposeLovelinkReport( 1 )
+
+#-----------------------------------------------------------------------------
 # Load database
 cd top
 dbLoadDatabase( "dbd/loveAppVX.dbd" )
