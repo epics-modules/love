@@ -104,6 +104,7 @@
  Author: David M. Kline
  -----------------------------------------------------------------------------
  2005-Feb-22  DMK  Initial development for ASYN-based device support.
+ 2005-Mar-21  DMK  Added suppport for the longin record type.
  -----------------------------------------------------------------------------
 
 -*/
@@ -159,6 +160,7 @@
 #include <boRecord.h>
 #include <biRecord.h>
 #include <mbbiRecord.h>
+#include <longinRecord.h>
 
 
 /* EPICS base version-specific include files */
@@ -278,6 +280,7 @@ typedef enum
 
 typedef enum
 {
+    liRec,
     aiRec,
     aoRec,
     biRec,
@@ -717,6 +720,9 @@ static asynStatus lov__validateParams( asynUser*, char*, rLOVREC* );
 static asynStatus lov__queueIt( dbCommon* );
 static asynStatus lov__recordInit( dbCommon*, DBLINK*, eFuncType, eRecType );
 
+static long li__init( struct longinRecord* );
+static long li__read( struct longinRecord* );
+
 static long ai__init( struct aiRecord* );
 static long ai__read( struct aiRecord* );
 
@@ -734,6 +740,16 @@ static long mbbi__read( struct mbbiRecord* );
 
 
 /* Define DSET structures */
+static rLOV__DSET devLiAsynLove   =
+{
+    5,
+    NULL,
+    NULL,
+    li__init,
+    NULL,
+    li__read,
+    NULL
+};
 static rLOV__DSET devAiAsynLove   =
 {
     6,
@@ -787,6 +803,7 @@ static rLOV__DSET devMbbiAsynLove =
 
 
 /* Publish DSET structure references to EPICS */
+epicsExportAddress(dset, devLiAsynLove);
 epicsExportAddress(dset, devAiAsynLove);
 epicsExportAddress(dset, devAoAsynLove);
 epicsExportAddress(dset, devBiAsynLove);
@@ -873,9 +890,9 @@ static long lov__report( int level )
     /* Output configuration information */
     printf( "\nLove Controller Configuration\n" );
     printf( "\tInterest level                  - %d\n", level );
-    printf( "\tRecord read count               - %d\n", lov__recReadCount );
-    printf( "\tRecord write count              - %d\n", lov__recWritCount );
-    printf( "\tRecord instance count           - %d\n", lov__recInstCount );
+    printf( "\tRecord read count               - %d\n", (int)lov__recReadCount );
+    printf( "\tRecord write count              - %d\n", (int)lov__recWritCount );
+    printf( "\tRecord instance count           - %d\n", (int)lov__recInstCount );
     printf( "\tEPICS release version           - %s\n", epicsReleaseVersion );
 
     /* Output instance information */
@@ -975,23 +992,26 @@ static long lov__report( int level )
 
         switch( prLov->recType )
         {
+        case liRec:
+            printf( "longin " );
+            break;
         case aiRec:
-            printf( "ai   " );
+            printf( "ai     " );
             break;
         case aoRec:
-            printf( "ao   " );
+            printf( "ao     " );
             break;
         case biRec:
-            printf( "bi   " );
+            printf( "bi     " );
             break;
         case boRec:
-            printf( "bo   " );
+            printf( "bo     " );
             break;
         case mbbiRec:
-            printf( "mbbi " );
+            printf( "mbbi   " );
             break;
         case maxRec:
-            printf( "INV  " );
+            printf( "INV    " );
             break;
         }
 
@@ -1292,9 +1312,9 @@ static void lov__getDecPts( rLOVREC* prLov )
  * Developer notes:
  *  1) Structure linkage:
  *     pasynUser->userPvt = prRec->dpvt =
- *          prLov->pasynUser      = pasynUser
- *               -> pasynOctet    = pasynIface->pinterface
- *               -> pasynOctetPvt = pasynIface->drvPvt
+ *          prLov->pasynUser     = pasynUser
+ *               ->pasynOctet    = pasynIface->pinterface
+ *               ->pasynOctetPvt = pasynIface->drvPvt
  *
  */
 static asynStatus lov__recordInit(
@@ -2152,6 +2172,115 @@ static void lov__ioCompletion1600( rLOVREC* prLov )
     return;
 
 } /* end-method: lov__ioCompletion1600() */
+
+
+/*
+ * li__init()
+ *
+ * Description:
+ *    This method performs the initialization for an LONGIN record.
+ *
+ * Input Parameters:
+ *    pli   - Address of longinRecord.
+ *
+ * Output Parameters:
+ *    None.
+ *
+ * Returns:
+ *    asynStatus
+ *
+ * Developer notes:
+ *
+ */
+static long li__init( struct longinRecord* pli )
+{
+    long sts;
+
+
+    /* Call common initialization method */
+    sts = lov__recordInit( (dbCommon*)pli, &pli->inp, inpFunc, liRec );
+
+    /* Return completion status */
+    return( sts );
+
+} /* end-method: li__init() */
+
+
+/*
+ * li__read()
+ *
+ * Description:
+ *    This method performs the read for an LONGIN record.
+ *
+ * Input Parameters:
+ *    pli   - Address of longinRecord.
+ *
+ * Output Parameters:
+ *    None.
+ *
+ * Returns:
+ *    LOV__STS_OKNOVAL
+ *
+ * Developer notes:
+ *
+ */
+static long li__read( struct longinRecord* pli )
+{
+    rLOVREC* prLov;
+
+
+    /* Initialize local variants */
+    prLov = (rLOVREC*)pli->dpvt;
+
+    /* Validate device private pointer */
+    if( prLov == NULL)
+    {
+       pli->pact = LOV__K_ACTIVE;
+       asynPrint( prLov->pasynUser, ASYN_TRACE_ERROR, "devAsynLove::li__read dpvt is NULL \"%s\"\n", pli->name );
+
+       return( LOV__STS_OKNOVAL );
+    }
+
+    /* When process record in inactive (pact = 0) */
+    if( pli->pact == LOV__K_INACTIVE )
+    {
+        /* Queue request */
+        lov__queueIt( (dbCommon*)pli );
+
+        /* Return completion status */
+        return( LOV__STS_OKNOVAL );
+    }
+
+    /* When process record is active (pact = 1) */
+    if( pli->pact == LOV__K_ACTIVE )
+    {
+        /* Call IO completion method */
+        prLov->prModel->ioCompletion( prLov );
+
+        /* Evaluate ASYN completion status */
+        if( ASYN__IS_OK(prLov->sts) )
+        {
+            pli->val = prLov->rawData.lData;
+            pli->udf = 0;
+        }
+        else
+        {
+            pli->udf = 1;
+
+            recGblSetSevr( pli, READ_ALARM, INVALID_ALARM );
+            asynPrint( prLov->pasynUser, ASYN_TRACE_ERROR, "devAsynLove::li__read failure in \"%s\"\n", pli->name );
+        }
+
+        /* Increment record read counter */
+        ++lov__recReadCount;
+        ++prLov->procCount;
+
+    }
+
+    /* Return completion status (always OKNOVAL) */
+    return( LOV__STS_OKNOVAL );
+
+} /* end-method: li__read() */
 
 
 /*
