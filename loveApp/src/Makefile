@@ -7,8 +7,7 @@ include $(TOP)/configure/CONFIG
 
 DBD += devLove.dbd
 
-LIBRARY_IOC_DEFAULT += love
-LIBRARY_IOC_solaris += -nil-
+LIBRARY_IOC_vxWorks += love
 
 love_SRCS += devLove.cc loveServer.cc
 love_LIBS += $(EPICS_BASE_IOC_LIBS)
