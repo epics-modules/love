@@ -19,4 +19,4 @@ IPAC=/home/oxygen/DKLINE/EPICS/synApps/support/ipac/2-8
 MPF=/home/oxygen/DKLINE/EPICS/synApps/support/mpf/2-4-2
 
 # EPICS_BASE usually appears last so other apps can override stuff:
-EPICS_BASE=$(TOP)/../../../../base-3.14.6
+EPICS_BASE=/home/oxygen/DKLINE/EPICS/base
