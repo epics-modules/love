@@ -1,5 +1,4 @@
-# Makefile.Host
-TOP = ../..
+TOP=../..
 include $(TOP)/configure/CONFIG
 #----------------------------------------
 #  ADD MACRO DEFINITIONS AFTER THIS LINE
@@ -11,12 +10,14 @@ include $(TOP)/configure/CONFIG
 #----------------------------------------------------
 # Create and install (or just install)
 # databases, templates, substitutions like this
-DB += devAsynLoveTest.db
+DB += asynRecord.db
+DB += devAsynLove.db
 
 #----------------------------------------------------
-# Declare template files which do not show up in DB
-#USES_TEMPLATE += dbExample2.template
+# If <anyname>.db template is not named <anyname>*.template add
+# <anyname>_TEMPLATE = <templatename>
 
 include $(TOP)/configure/RULES
 #----------------------------------------
 #  ADD RULES AFTER THIS LINE
+

@@ -97,7 +97,6 @@
 
 /* System related include files */
 #include <math.h>
-#include <types.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -156,8 +155,8 @@ typedef struct rILL
 /* Define local variants */
 static rILL* prLoveList       = NULL;           /* List of LOVE instances */
 
-static BOOL inputEosSet       = FALSE;          /* Input EOS indicator */
-static BOOL outputEosSet      = FALSE;          /* Output EOS indicator */
+static char inputEosSet       = 0;              /* Input EOS indicator */
+static char outputEosSet      = 0;              /* Output EOS indicator */
 
 static char loveLinkinputEOS  = ILL__K_ACK;     /* Input EOS */
 static char loveLinkoutputEOS = ILL__K_ETX;     /* Output EOS */
@@ -184,7 +183,7 @@ int interposeLovelink(const char*, int );
 
 /* Declare local forward references for 'helper' methods */
 static asynStatus setDefaultEos(rILL*);
-static void calcChecksum(size_t, const char*, UCHAR*);
+static void calcChecksum(size_t, const char*, unsigned char*);
 static asynStatus evalMessage(size_t*, char*, asynUser*);
 
 
@@ -404,10 +403,10 @@ static asynStatus writeIt( void*       ppvt,
                            size_t*     pnbytesTransfered
                          )
 {
-    size_t     len;
-    UCHAR      cs;
-    char       msg[ILL__S_MSG];
-    asynStatus sts;
+    size_t        len;
+    unsigned char cs;
+    char          msg[ILL__S_MSG];
+    asynStatus    sts;
 
 
     /* Output flow message */
@@ -425,7 +424,7 @@ static asynStatus writeIt( void*       ppvt,
     len = strlen( msg );
 
     /* Include EOS (must be included if not previously set) */
-    if( outputEosSet == FALSE )
+    if( outputEosSet == 0 )
     {
         /* Append EOS */
         msg[len] = loveLinkoutputEOS;
@@ -865,12 +864,12 @@ static asynStatus setInputEos( void*       ppvt,
     /* Evaluate completion status */
     if( ASYN__IS_OK(sts) )
     {
-        inputEosSet = TRUE;
+        inputEosSet = 1;
         asynPrint( pasynUser, ASYN_TRACE_FLOW, "interposeLovelink::Input EOS set to \\0%d\n", *eos );
     }
     else
     {
-        inputEosSet = FALSE;
+        inputEosSet = 0;
         asynPrint( pasynUser, ASYN_TRACE_ERROR, "interposeLovelink::Input EOS set failed to \\0%d\n", *eos );
     }
 
@@ -974,12 +973,12 @@ static asynStatus setOutputEos( void*       ppvt,
     /* Evaluate completion status */
     if( ASYN__IS_OK(sts) )
     {
-        outputEosSet = TRUE;
+        outputEosSet = 1;
         asynPrint( pasynUser, ASYN_TRACE_FLOW, "interposeLovelink::Output EOS set to \\0%d\n", *eos );
     }
     else
     {
-        outputEosSet = FALSE;
+        outputEosSet = 0;
         asynPrint( pasynUser, ASYN_TRACE_ERROR, "interposeLovelink::Output EOS set failed to \\0%d\n", *eos );
     }
 
@@ -1076,11 +1075,11 @@ static asynStatus getOutputEos( void*     ppvt,
  */
 static asynStatus evalMessage( size_t* pcount, char* pdata, asynUser* pasynUser )
 {
-    asynStatus sts;
-    UCHAR      cs;
-    UINT       msgcs;
-    UCHAR      cspos;
-    size_t     len;
+    size_t        len;
+    asynStatus    sts;
+    unsigned int  msgcs;
+    unsigned char cspos;
+    unsigned char cs;
 
 
     /* Output message */
@@ -1109,7 +1108,7 @@ static asynStatus evalMessage( size_t* pcount, char* pdata, asynUser* pasynUser 
     /* Evaluate for error message ('N' character) */
     if( pdata[ILL__K_INDEX_ERRID] == ILL__K_ERROR )
     {
-        ULONG errorCode;
+        unsigned long errorCode;
 
         /* Extract error code */
         errorCode = atol( &pdata[ILL__K_INDEX_ERRCODE] );
@@ -1118,7 +1117,7 @@ static asynStatus evalMessage( size_t* pcount, char* pdata, asynUser* pasynUser 
         asynPrint( pasynUser, ASYN_TRACE_ERROR, "interposeLovelink::evalMessage error message received \"%s\"\n", loveErrorCodes[errorCode] );
 
         /* Calc. message length (account for presense or ACK) */
-        if( inputEosSet == TRUE )
+        if( inputEosSet == 1 )
         {
             len = *pcount - 2;      /* Subtract for STX, FILTER */
         }
@@ -1138,7 +1137,7 @@ static asynStatus evalMessage( size_t* pcount, char* pdata, asynUser* pasynUser 
         asynPrint( pasynUser, ASYN_TRACE_FLOW, "interposeLovelink::evalMessage message received\n" );
 
         /* Calc. message length (account for ACK presense) */
-        if( inputEosSet == TRUE )
+        if( inputEosSet == 1 )
         {
             len   = *pcount - 4;    /* Subtract for STX, FILTER, CHECKSUM */
             cspos = *pcount - 2;
@@ -1156,7 +1155,7 @@ static asynStatus evalMessage( size_t* pcount, char* pdata, asynUser* pasynUser 
         sscanf( &pdata[cspos], "%2x", &msgcs );
 
         /* Evaluate checksum */
-        if( (UINT)msgcs != (UINT)cs )
+        if( (unsigned int)msgcs != (unsigned int)cs )
         {
             asynPrint( pasynUser, ASYN_TRACE_ERROR, "interposeLovelink::evalMessage checksum failed\n" );
             return( asynError );
@@ -1193,10 +1192,10 @@ static asynStatus evalMessage( size_t* pcount, char* pdata, asynUser* pasynUser 
  * Developer notes:
  *
  */
-static void calcChecksum( size_t count, const char* pdata, UCHAR* pcs )
+static void calcChecksum( size_t count, const char* pdata, unsigned char* pcs )
 {
-    int   i;
-    ULONG cs;
+    int           i;
+    unsigned long cs;
 
 
     /* Initialize checksum */
@@ -1209,7 +1208,7 @@ static void calcChecksum( size_t count, const char* pdata, UCHAR* pcs )
     }
 
     /* Truncate and assign checksum */
-    *pcs = (UCHAR)(cs & ILL__M_CHECKSUM);
+    *pcs = (unsigned char)(cs & ILL__M_CHECKSUM);
 
     /* Return to caller */
     return;

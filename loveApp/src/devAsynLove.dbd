@@ -1,9 +1,11 @@
+#=============================================================================
+# ASYN-based Love Controller definitions
+#-----------------------------------------------------------------------------
 
-# ASYN-based Love Controller device support
-#
 device(ai,   INST_IO, devAiAsynLove,   "devAsynLove" )
 device(ao,   INST_IO, devAoAsynLove,   "devAsynLove" )
 device(bi,   INST_IO, devBiAsynLove,   "devAsynLove" )
 device(bo,   INST_IO, devBoAsynLove,   "devAsynLove" )
 device(mbbi, INST_IO, devMbbiAsynLove, "devAsynLove" )
+registrar(registerLovelink)
 

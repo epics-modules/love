@@ -127,7 +127,6 @@
 
 /* System related include files */
 #include <math.h>
-#include <types.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -322,17 +321,15 @@ typedef enum
 /* Declare datatypes union */
 typedef union uDATATYPE
 {
-    char    cData;
-    UCHAR   ucData;
+    double dData;
+    float  fData;
+    short  sData;
+    long   lData;
+    char   cData;
 
-    short   sData;
-    USHORT  usData;
-
-    long    lData;
-    ULONG   ulData;
-
-    float   fData;
-    double  dData;
+    unsigned char  ucData;
+    unsigned short usData;
+    unsigned long  ulData;
 
 } uDATATYPE;
 
@@ -540,9 +537,9 @@ static void lov__ioCompletion1600( rLOVREC* );
 
 
 /* Define local variants */
-static UINT lov__recReadCount;              /* Record read count */
-static UINT lov__recWritCount;              /* Record write count */
-static UINT lov__recInstCount;              /* Record instance count */
+static unsigned long lov__recReadCount;     /* Record read count */
+static unsigned long lov__recWritCount;     /* Record write count */
+static unsigned long lov__recInstCount;     /* Record instance count */
 
 static rLOVREC* lov__prInstances = NULL;    /* List of instances */
 
