@@ -75,6 +75,7 @@
  -----------------------------------------------------------------------------
  2005-Feb-17  DMK  Taken from the existing echoServer interpose interface.
  2005-Feb-21  DMK  Initial version complete. Private code review ready.
+ 2005-Mar-18  DMK  Modified from code inspection.
  -----------------------------------------------------------------------------
 
 -*/
@@ -140,20 +141,22 @@
 #define ILL__K_INDEX_ERRCODE    ( 5 )
 
 
-/* Declare Love data structure */
+/* Declare Lovelink data structure */
 typedef struct rILL
 {
-    int           addr;             /* Controller address (unused) */
-    char*         strPortname;      /* Port name string */
-    asynInterface octet;            /* Pointer to Octet structure */
-    asynOctet*    pasynOctet;       /* Pointer to method pointer structure */
-    void*         pasynOctetPvt;    /* Low level driver */
-    struct rILL*  pnext;            /* Pointer to rILL next structure */
+    int           addr;                 /* Controller address (unused) */
+    char*         strPortname;          /* Port name string */
+    asynInterface octet;                /* Pointer to Octet structure */
+    asynOctet*    pasynOctet;           /* Pointer to method pointer struct */
+    void*         pasynOctetPvt;        /* Low level driver */
+    char          outMsg[ILL__S_MSG];   /* Output (write) message buffer */
+    char          inpMsg[ILL__S_MSG];   /* Input (read) message buffer */
+    struct rILL*  pnext;                /* Pointer to rILL next structure */
 } rILL;
 
 
 /* Define local variants */
-static rILL* prLoveList       = NULL;           /* List of LOVE instances */
+static rILL* prLoveList       = NULL;           /* List of rILL instances */
 
 static char inputEosSet       = 0;              /* Input EOS indicator */
 static char outputEosSet      = 0;              /* Output EOS indicator */
@@ -206,7 +209,7 @@ static asynStatus registerInterruptUser(void*,asynUser*,interruptCallbackOctet, 
 
 
 /* Publish interpose-interface methods to asynOctet interface */
-static asynOctet octet =
+static asynOctet rOctetMethods =
 {
     writeIt,
     writeRaw,
@@ -251,6 +254,8 @@ static asynOctet octet =
  *    0 for success, -1 for Failure.
  *
  * Developer notes:
+ *    - Memory allocated for the rILL structure is not released because
+ *      Asyn does not provide a way to 'remove' an interface.
  *
  */
 int interposeLovelink( const char *pname, int addr )
@@ -273,7 +278,7 @@ int interposeLovelink( const char *pname, int addr )
 
     /* Assign LOVE data structure Octet members */
     prLov->octet.interfaceType = asynOctetType;
-    prLov->octet.pinterface    = &octet;
+    prLov->octet.pinterface    = &rOctetMethods;
     prLov->octet.drvPvt        = prLov;
 
     /* Perform interface interpose */
@@ -283,7 +288,6 @@ int interposeLovelink( const char *pname, int addr )
     if( ASYN__IS_NOTOK(sts) || (poaIface == NULL) )
     {
         printf( "interposeLovelink(): %s interpose failed.\n", pname );
-        free( prLov );
 
         return( -1 );
     }
@@ -306,7 +310,6 @@ int interposeLovelink( const char *pname, int addr )
     if( ASYN__IS_NOTOK(sts) )
     {
         printf( "interposeLovelink(): %s set EOS failed.\n", pname );
-        free( prLov );
 
         return( -1 );
     }
@@ -381,13 +384,13 @@ int interposeLovelinkReport( int level )
  *    pnbytesTransfered.
  *
  * Input Parameters:
- *    ppvt              - Pointer to LOVE data structure.
- *    pasynUser         - Pointer to ASYN user.
- *    data              - Pointer to write data.
- *    numchars          - Size of data (in bytes).
+ *    ppvt               - Pointer to LOVE data structure.
+ *    pasynUser          - Pointer to ASYN user.
+ *    data               - Pointer to write data.
+ *    numchars           - Size of data (in bytes).
  *
  * Output Parameters:
- *    nBytesTransferred - Pointer to byte count transmitted to controller.
+ *    pnbytesTransferred - Pointer to byte count transmitted to controller.
  *
  * Returns:
  *    Completion status
@@ -403,48 +406,62 @@ static asynStatus writeIt( void*       ppvt,
                            size_t*     pnbytesTransfered
                          )
 {
-    size_t        len;
     unsigned char cs;
-    char          msg[ILL__S_MSG];
     asynStatus    sts;
+    size_t        len;
+    size_t        bytesXfer;
+    size_t*       pbytesXfer;
+    rILL*         prLov = (rILL*)ppvt;
 
 
-    /* Output flow message */
+    /* Output trace message */
     asynPrint( pasynUser, ASYN_TRACE_FLOW, "interposeLovelink::writeIt\n" );
+
+    /* Determine 'bytes sent' pointer */
+    if( pnbytesTransfered == NULL )
+    {
+        pbytesXfer = &bytesXfer;
+    }
+    else
+    {
+        pbytesXfer = pnbytesTransfered;
+    }
 
     /* Calculate checksum */
     calcChecksum( numchars, data, &cs );
 
     /* Build message (STX, FILTER, ADDRESS, DATA) */
-    msg[ILL__K_INDEX_STX]    = ILL__K_STX;
-    msg[ILL__K_INDEX_FILTER] = loveLinkFilter;
-    sprintf( &msg[ILL__K_INDEX_ADDR], "%*.*s%2.2X", (int)numchars, (int)numchars, data, cs );
+    prLov->outMsg[ILL__K_INDEX_STX]    = ILL__K_STX;
+    prLov->outMsg[ILL__K_INDEX_FILTER] = loveLinkFilter;
+    sprintf( &prLov->outMsg[ILL__K_INDEX_ADDR], "%*.*s%2.2X", (int)numchars, (int)numchars, data, cs );
 
     /* Calculate message length */
-    len = strlen( msg );
+    len = strlen( prLov->outMsg );
 
     /* Include EOS (must be included if not previously set) */
     if( outputEosSet == 0 )
     {
         /* Append EOS */
-        msg[len] = loveLinkoutputEOS;
+        prLov->outMsg[len] = loveLinkoutputEOS;
 
         /* Recalculate message length */
         ++len;
     }
 
     /* Execute write */
-    sts = writeRaw( ppvt, pasynUser, msg, len, pnbytesTransfered );
+    sts = writeRaw( ppvt, pasynUser, prLov->outMsg, len, pbytesXfer );
 
     /* Evaluate completion status */
     if( ASYN__IS_OK(sts) )
     {
-
         /* Make assignment to avoid 'write error' */
-        if( len == *pnbytesTransfered )
+        if( len == *pbytesXfer )
         {
-            *pnbytesTransfered = numchars;
+            *pbytesXfer = numchars;
         }
+
+        /* Output trace message */
+        asynPrintIO( pasynUser, ASYN_TRACEIO_FILTER, data, len, "interposeLovelink::writeIt\n" );
 
     }
 
@@ -463,13 +480,13 @@ static asynStatus writeIt( void*       ppvt,
  *    string terminators to the message.
  *
  * Input Parameters:
- *    ppvt              - Pointer to LOVE data structure.
- *    pasynUser         - Pointer to ASYN user.
- *    data              - Pointer to write data.
- *    numchars          - Size of data (in bytes).
+ *    ppvt               - Pointer to LOVE data structure.
+ *    pasynUser          - Pointer to ASYN user.
+ *    data               - Pointer to write data.
+ *    numchars           - Size of data (in bytes).
  *
  * Output Parameters:
- *    nBytesTransferred - Pointer to byte count transmitted to controller.
+ *    pnbytesTransferred - Pointer to byte count transmitted to controller.
  *
  * Returns:
  *    asynStatus
@@ -485,19 +502,31 @@ static asynStatus writeRaw( void*       ppvt,
                           )
 {
     asynStatus sts;
+    size_t     bytesXfer;
+    size_t*    pbytesXfer;
     rILL*      prLov = (rILL*)ppvt;
 
 
-    /* Output flow message */
+    /* Output trace message */
     asynPrint( pasynUser, ASYN_TRACE_FLOW, "interposeLovelink::writeRaw\n" );
 
+    /* Determine 'bytes sent' pointer */
+    if( pnbytesTransfered == NULL )
+    {
+        pbytesXfer = &bytesXfer;
+    }
+    else
+    {
+        pbytesXfer = pnbytesTransfered;
+    }
+
     /* Execute write */
-    sts = prLov->pasynOctet->write( prLov->pasynOctetPvt, pasynUser, data, numchars, pnbytesTransfered );
+    sts = prLov->pasynOctet->write( prLov->pasynOctetPvt, pasynUser, data, numchars, pbytesXfer );
 
     /* Evaluate completion status */
     if( ASYN__IS_OK(sts) )
     {
-        asynPrintIO( pasynUser, ASYN_TRACEIO_FILTER, data, *pnbytesTransfered, "interposeLovelink::writeRaw\n" );
+        asynPrintIO( pasynUser, ASYN_TRACEIO_FILTER, data, *pbytesXfer, "interposeLovelink::writeRaw\n" );
     }
     else
     {
@@ -540,14 +569,14 @@ static asynStatus writeRaw( void*       ppvt,
  *    *pnbytesTransfered.
  *
  * Input Parameters:
- *    ppvt              - Pointer to LOVE data structure.
- *    pasynUser         - Pointer to ASYN user.
- *    data              - Pointer to read data.
- *    maxchars          - Max. size of read data (in bytes).
+ *    ppvt               - Pointer to LOVE data structure.
+ *    pasynUser          - Pointer to ASYN user.
+ *    data               - Pointer to read data.
+ *    maxchars           - Max. size of read data (in bytes).
  *
  * Output Parameters:
- *    nBytesTransferred - Number of bytes read.
- *    peomReason        - Pointer to reason for End-Of-Message.
+ *    pnbytesTransferred - Number of bytes read.
+ *    peomReason         - Pointer to reason for End-Of-Message.
  *
  * Returns:
  *    asynStatus
@@ -563,24 +592,52 @@ static asynStatus readIt( void*     ppvt,
                           int*      peomReason
                         )
 {
-    char       msg[ILL__S_MSG];
     asynStatus sts;
+    int        Eom;
+    int*       pEom;
+    size_t     bytesXfer;
+    size_t*    pbytesXfer;
+    rILL*      prLov = (rILL*)ppvt;
 
 
-    /* Output message */
+    /* Output trace message */
     asynPrint( pasynUser, ASYN_TRACE_FLOW, "interposeLovelink::readIt\n" );
 
+    /* Determine 'bytes sent' pointer */
+    if( pnbytesTransfered == NULL )
+    {
+        pbytesXfer = &bytesXfer;
+    }
+    else
+    {
+        pbytesXfer = pnbytesTransfered;
+    }
+
+    /* Determine 'EOM' pointer */
+    if( peomReason == NULL )
+    {
+        pEom = &Eom;
+    }
+    else
+    {
+        pEom = peomReason;
+    }
+
     /* Execute read */
-    sts = readRaw( ppvt, pasynUser, msg, maxchars, pnbytesTransfered, peomReason );
+    sts = readRaw( ppvt, pasynUser, prLov->inpMsg, maxchars, pbytesXfer, pEom );
 
     /* Evaluate completion status */
     if( ASYN__IS_OK(sts) )
     {
         /* Evaluate message */
-        sts = evalMessage( pnbytesTransfered, msg, pasynUser );
+        sts = evalMessage( pbytesXfer, prLov->inpMsg, pasynUser );
 
         /* Copy return data */
-        memcpy( data, &msg[ILL__K_INDEX_ADDR], *pnbytesTransfered );
+        memcpy( data, &prLov->inpMsg[ILL__K_INDEX_ADDR], *pbytesXfer );
+
+        /* Output trace message */
+        asynPrintIO( pasynUser, ASYN_TRACEIO_FILTER, data, *pbytesXfer, "interposeLovelink::readIt\n" );
+
     }
 
     /* Return completion status */
@@ -599,14 +656,14 @@ static asynStatus readIt( void*     ppvt,
  *    of string terminators from the message.
  *
  * Input Parameters:
- *    ppvt              - Pointer to LOVE data structure.
- *    pasynUser         - Pointer to ASYN user.
- *    data              - Pointer to read data.
- *    maxchars          - Max. size of read data (in bytes).
+ *    ppvt               - Pointer to LOVE data structure.
+ *    pasynUser          - Pointer to ASYN user.
+ *    data               - Pointer to read data.
+ *    maxchars           - Max. size of read data (in bytes).
  *
  * Output Parameters:
- *    nBytesTransferred - Number of bytes read.
- *    eomReason         - Pointer to reason for End-Of-Message.
+ *    pnbytesTransferred - Number of bytes read.
+ *    peomReason         - Pointer to reason for End-Of-Message.
  *
  * Returns:
  *    asynStatus
@@ -619,30 +676,55 @@ static asynStatus readRaw( void*     ppvt,
                            char*     data,
                            size_t    maxchars,
                            size_t*   pnbytesTransfered,
-                           int*      eomReason
+                           int*      peomReason
                          )
 {
     asynStatus sts;
+    int        Eom;
+    int*       pEom;
+    size_t     bytesXfer;
+    size_t*    pbytesXfer;
     rILL*      prLov = (rILL*)ppvt;
 
 
-    /* Output flow message */
+    /* Output trace message */
     asynPrint( pasynUser, ASYN_TRACE_FLOW, "interposeLovelink::readRaw\n" );
 
+    /* Determine 'bytes sent' pointer */
+    if( pnbytesTransfered == NULL )
+    {
+        pbytesXfer = &bytesXfer;
+    }
+    else
+    {
+        pbytesXfer = pnbytesTransfered;
+    }
+
+    /* Determine 'EOM' pointer */
+    if( peomReason == NULL )
+    {
+        pEom = &Eom;
+    }
+    else
+    {
+        pEom = peomReason;
+    }
+
     /* Execute read */
-    sts = prLov->pasynOctet->read( prLov->pasynOctetPvt, pasynUser, data, maxchars, pnbytesTransfered, eomReason );
+    sts = prLov->pasynOctet->read( prLov->pasynOctetPvt, pasynUser, data, maxchars, pbytesXfer, pEom );
 
     /* Evaluate completion status */
     if( ASYN__IS_OK(sts) )
     {
-        asynPrintIO( pasynUser, ASYN_TRACEIO_FILTER, data, *pnbytesTransfered, "interposeLovelink::readRaw success\n" );
-
         /* Evaluate EOM response */
-        if( (*eomReason & ASYN_EOM_EOS) == 0 )
+        if( (*pEom & ASYN_EOM_EOS) == 0 )
         {
             sts = asynError;
-            asynPrint( pasynUser, ASYN_TRACE_ERROR, "interposeLovelink::readRaw invalid EOM reason %d\n", *eomReason );
+            asynPrint( pasynUser, ASYN_TRACE_ERROR, "interposeLovelink::readRaw invalid EOM reason %d\n", *pEom );
         }
+
+        /* Output trace message */
+        asynPrintIO( pasynUser, ASYN_TRACEIO_FILTER, data, *pbytesXfer, "interposeLovelink::readRaw success\n" );
 
     }
     else
@@ -699,7 +781,7 @@ static asynStatus flushIt( void* ppvt, asynUser* pasynUser )
     rILL*      prLov = (rILL*)ppvt;
 
 
-    /* Output message */
+    /* Output trace message */
     asynPrint( pasynUser, ASYN_TRACE_FLOW, "interposeLovelink::flushIt\n" );
 
     /* Execute flush */
@@ -755,7 +837,7 @@ static asynStatus registerInterruptUser( void*                  ppvt,
     rILL*      prLov = (rILL*)ppvt;
 
 
-    /* Output message */
+    /* Output trace message */
     asynPrint( pasynUser, ASYN_TRACE_FLOW, "interposeLovelink::registerInterruptUser\n" );
 
     /* Execute registration */
@@ -802,7 +884,7 @@ static asynStatus cancelInterruptUser( void* ppvt, asynUser* pasynUser )
     rILL*      prLov = (rILL*)ppvt;
 
 
-    /* Output message */
+    /* Output trace message */
     asynPrint( pasynUser, ASYN_TRACE_FLOW, "interposeLovelink::cancelInterruptUser\n" );
 
     /* Execute cancellation */
@@ -855,7 +937,7 @@ static asynStatus setInputEos( void*       ppvt,
     rILL*      prLov = (rILL*)ppvt;
 
 
-    /* Output message */
+    /* Output trace message */
     asynPrint( pasynUser, ASYN_TRACE_FLOW, "interposeLovelink::setInputEos\n" );
 
     /* Call driver to set input EOS */
@@ -911,7 +993,7 @@ static asynStatus getInputEos( void*     ppvt,
     rILL*      prLov = (rILL*)ppvt;
 
 
-    /* Output message */
+    /* Output trace message */
     asynPrint( pasynUser, ASYN_TRACE_FLOW, "interposeLovelink::getInputEos\n" );
 
     /* Acquire input EOS */
@@ -964,7 +1046,7 @@ static asynStatus setOutputEos( void*       ppvt,
     rILL*      prLov = (rILL*)ppvt;
 
 
-    /* Output message */
+    /* Output trace message */
     asynPrint( pasynUser, ASYN_TRACE_FLOW, "interposeLovelink::setOutputEos\n" );
 
     /* Call driver to set output EOS */
@@ -1020,7 +1102,7 @@ static asynStatus getOutputEos( void*     ppvt,
     rILL*      prLov = (rILL*)ppvt;
 
 
-    /* Output message */
+    /* Output trace message */
     asynPrint( pasynUser, ASYN_TRACE_FLOW, "interposeLovelink::getOutputEos\n" );
 
     /* Acquire output EOS */
@@ -1082,7 +1164,7 @@ static asynStatus evalMessage( size_t* pcount, char* pdata, asynUser* pasynUser 
     unsigned char cs;
 
 
-    /* Output message */
+    /* Output trace message */
     asynPrint( pasynUser, ASYN_TRACE_FLOW, "interposeLovelink:evalMessage\n" );
 
     /* NULL terminate message */
@@ -1113,7 +1195,7 @@ static asynStatus evalMessage( size_t* pcount, char* pdata, asynUser* pasynUser 
         /* Extract error code */
         errorCode = atol( &pdata[ILL__K_INDEX_ERRCODE] );
 
-        /* Output banner */
+        /* Output trace message */
         asynPrint( pasynUser, ASYN_TRACE_ERROR, "interposeLovelink::evalMessage error message received \"%s\"\n", loveErrorCodes[errorCode] );
 
         /* Calc. message length (account for presense or ACK) */
@@ -1133,7 +1215,7 @@ static asynStatus evalMessage( size_t* pcount, char* pdata, asynUser* pasynUser 
     else
     {
 
-        /* Output banner */
+        /* Output trace message */
         asynPrint( pasynUser, ASYN_TRACE_FLOW, "interposeLovelink::evalMessage message received\n" );
 
         /* Calc. message length (account for ACK presense) */
