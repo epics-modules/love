@@ -3,7 +3,7 @@ Love controller Release Notice
 
 R2-0
 ====
-Converted to EPICS 3.14
+Converted to EPICS 3.14 (vxWorks only)
 
 R1-3
 ====
