@@ -76,6 +76,11 @@
  2005-Feb-17  DMK  Taken from the existing echoServer interpose interface.
  2005-Feb-21  DMK  Initial version complete. Private code review ready.
  2005-Mar-18  DMK  Modified from code inspection.
+ 2005-Mar-21  DMK  Added showFailure() to display a message and return
+                   asynError for setInputEos(), setOutputEos(),
+                   registerInterruptUser(), and cancelInterruptUser(). Note
+                   that the input/output EOS can only be set once. This is
+                   done during the interface initialization.
  -----------------------------------------------------------------------------
 
 -*/
@@ -186,8 +191,9 @@ int interposeLovelink(const char*, int );
 
 /* Declare local forward references for 'helper' methods */
 static asynStatus setDefaultEos(rILL*);
-static void calcChecksum(size_t, const char*, unsigned char*);
+static asynStatus showFailure(asynUser*, const char*);
 static asynStatus evalMessage(size_t*, char*, asynUser*);
+static void calcChecksum(size_t, const char*, unsigned char*);
 
 
 /* Declare local forward references for asynOctet methods */
@@ -201,11 +207,11 @@ static asynStatus getOutputEos(void*, asynUser*, char*, int, int*);
 static asynStatus writeIt(void*, asynUser*, const char*, size_t, size_t*);
 static asynStatus writeRaw(void*, asynUser*, const char*, size_t, size_t*);
 
-static asynStatus readIt(void*, asynUser*, char*, size_t,size_t*,int*);
+static asynStatus readIt(void*, asynUser*, char*, size_t,size_t*, int*);
 static asynStatus readRaw(void*, asynUser*, char*, size_t, size_t*, int*);
 
 static asynStatus cancelInterruptUser(void*, asynUser*);
-static asynStatus registerInterruptUser(void*,asynUser*,interruptCallbackOctet, void*, void**);
+static asynStatus registerInterruptUser(void*, asynUser*, interruptCallbackOctet, void*, void**);
 
 
 /* Publish interpose-interface methods to asynOctet interface */
@@ -834,24 +840,12 @@ static asynStatus registerInterruptUser( void*                  ppvt,
                                        )
 {
     asynStatus sts;
-    rILL*      prLov = (rILL*)ppvt;
-
 
     /* Output trace message */
-    asynPrint( pasynUser, ASYN_TRACE_FLOW, "interposeLovelink::registerInterruptUser\n" );
+    asynPrint( pasynUser, (ASYN_TRACE_FLOW | ASYN_TRACE_ERROR), "interposeLovelink::registerInterruptUser\n" );
 
-    /* Execute registration */
-    sts = prLov->pasynOctet->registerInterruptUser( prLov->pasynOctetPvt, pasynUser, callback, userPvt, registrarPvt );
-
-    /* Evaluate completion status */
-    if( ASYN__IS_OK(sts) )
-    {
-        asynPrint( pasynUser, ASYN_TRACE_FLOW, "interposeLovelink::registerInterruptUser done\n" );
-    }
-    else
-    {
-        asynPrint( pasynUser, ASYN_TRACE_ERROR, "interposeLovelink::registerInterruptUser failed\n" );
-    }
+    /* Indicate failure */
+    sts = showFailure( pasynUser, "registerInterruptUser" );
 
     /* Return completion status */
     return( sts );
@@ -881,24 +875,13 @@ static asynStatus registerInterruptUser( void*                  ppvt,
 static asynStatus cancelInterruptUser( void* ppvt, asynUser* pasynUser )
 {
     asynStatus sts;
-    rILL*      prLov = (rILL*)ppvt;
 
 
     /* Output trace message */
-    asynPrint( pasynUser, ASYN_TRACE_FLOW, "interposeLovelink::cancelInterruptUser\n" );
+    asynPrint( pasynUser, (ASYN_TRACE_FLOW | ASYN_TRACE_ERROR), "interposeLovelink::cancelInterruptUser\n" );
 
-    /* Execute cancellation */
-    sts = prLov->pasynOctet->cancelInterruptUser( prLov->pasynOctetPvt, pasynUser );
-
-    /* Evaluate completion status */
-    if( ASYN__IS_OK(sts) )
-    {
-        asynPrint( pasynUser, ASYN_TRACE_FLOW, "interposeLovelink::cancelInterruptUser done\n" );
-    }
-    else
-    {
-        asynPrint( pasynUser, ASYN_TRACE_ERROR, "interposeLovelink::cancelInterruptUser failed\n" );
-    }
+    /* Indicate failure */
+    sts = showFailure( pasynUser, "cancelInterruptUser" );
 
     /* Return completion status */
     return( sts );
@@ -939,6 +922,13 @@ static asynStatus setInputEos( void*       ppvt,
 
     /* Output trace message */
     asynPrint( pasynUser, ASYN_TRACE_FLOW, "interposeLovelink::setInputEos\n" );
+
+    /* Evaluate set state */
+    if( inputEosSet == 1 )
+    {
+        sts = showFailure( pasynUser, "setInputEos" );
+        return( sts );
+    }
 
     /* Call driver to set input EOS */
     sts = prLov->pasynOctet->setInputEos( prLov->pasynOctetPvt, pasynUser, eos, eoslen );
@@ -1048,6 +1038,13 @@ static asynStatus setOutputEos( void*       ppvt,
 
     /* Output trace message */
     asynPrint( pasynUser, ASYN_TRACE_FLOW, "interposeLovelink::setOutputEos\n" );
+
+    /* Evaluate set state */
+    if( outputEosSet == 1 )
+    {
+        sts = showFailure( pasynUser, "setOutputEos" );
+        return( sts );
+    }
 
     /* Call driver to set output EOS */
     sts = prLov->pasynOctet->setOutputEos( prLov->pasynOctetPvt, pasynUser, eos, eoslen );
@@ -1366,6 +1363,53 @@ static asynStatus setDefaultEos( rILL* prLov )
     return( sts );
 
 } /* end-method: setDefaultEos */
+
+
+/*
+ * showFailure()
+ *
+ * Description:
+ *    This method displays information about the Asyn error status.
+ *
+ * Input Parameters:
+ *    pasynUser - Pointer to Asyn user.
+ *    pmethod   - Pointer to method name.
+ *
+ * Output Parameters:
+ *    None.
+ *
+ * Returns:
+ *    asynStatus
+ *
+ * Developer notes:
+ *
+ */
+static asynStatus showFailure( asynUser* pasynUser, const char* pmethod )
+{
+    asynStatus sts;
+    const char *portName;
+
+
+    /* Output trace message */
+    asynPrint( pasynUser, ASYN_TRACE_FLOW, "interposeLovelink::showFailure\n" );
+
+    /* Acquire Asyn port name */
+    sts = pasynManager->getPortName( pasynUser, &portName );
+
+    /* Evaluate return status */
+    if( ASYN__IS_OK(sts) )
+    {
+        epicsSnprintf( pasynUser->errorMessage, pasynUser->errorMessageSize, "%s interposeLovelink::%s unsupported\n", portName, pmethod );
+    }
+    else
+    {
+        asynPrint( pasynUser, ASYN_TRACE_ERROR, "interposeLovelink::showFailure failure to acquire port name\n" );
+    }
+
+    /* Return to caller */
+    return( asynError );
+
+}
 
 
 /****************************************************************************
