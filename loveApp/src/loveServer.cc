@@ -14,6 +14,8 @@
 //  March 5, 2002
 //  Changed soft delay (loveSeverDelay) to VxWorks task delay. - Ron Sluiter
 //  January 19, 2005
+//  Modified writeRead() call to write() in order for it to compile. - David Kline
+//  February 11, 2005
 /*
  *****************************************************************
  *                         COPYRIGHT NOTIFICATION
@@ -587,8 +589,7 @@ on 485.  The devices need time to switch from transmitting to listening.
 */
     taskDelay(2);
 
-    int status = pSerialPort->writeRead(
-        (unsigned char *)cmdBuf,::strlen(cmdBuf),loveTimeout);
+    int status = pSerialPort->write( (unsigned char *)cmdBuf,::strlen(cmdBuf),loveTimeout);
     readBuf[nextRead] = 0;
     if (nextRead < 5) {
     	status = -1;
