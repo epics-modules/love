@@ -60,7 +60,7 @@ loveApp_solaris_LIBS +=
 
 loveApp_LIBS_DEFAULT += $(loveApp_Common_LIBS)
 loveApp_LIBS_Linux   += $(loveApp_Common_LIBS) $(loveApp_Linux_LIBS)
-loveApp_LIBS_vxWorks += $(loveApp_Common_LIBS) $(loveApp_vxWorkS_LIBS)
+loveApp_LIBS_vxWorks += $(loveApp_Common_LIBS) $(loveApp_vxWorks_LIBS)
 loveApp_LIBS_solaris += $(loveApp_Common_LIBS) $(loveApp_solaris_LIBS)
 #
 #==============================================================================
