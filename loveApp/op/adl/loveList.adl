@@ -1,6 +1,6 @@
 
 file {
-	name="/home/oxygen12/DKLINE/EPICS/synApps/support/love/work/medm/loveList.adl"
+	name="/home/oxygen12/DKLINE/EPICS/synApps/support/love/work/loveApp/op/adl/loveList.adl"
 	version=030003
 }
 display {
@@ -95,7 +95,7 @@ display {
 		height=20
 	}
 	monitor {
-		chan="$(P1):$(M1):getVal"
+		chan="$(P1):$(Q1):getVal"
 		clr=60
 		bclr=14
 	}
@@ -112,7 +112,7 @@ display {
 		height=20
 	}
 	monitor {
-		chan="$(P2):$(M2):getVal"
+		chan="$(P2):$(Q2):getVal"
 		clr=60
 		bclr=14
 	}
@@ -131,7 +131,7 @@ text {
 	"basic attribute" {
 		clr=14
 	}
-	textix="$(P1):$(M1)"
+	textix="$(P1):$(Q1)"
 }
 text {
 	object {
@@ -143,7 +143,7 @@ text {
 	"basic attribute" {
 		clr=14
 	}
-	textix="$(P2):$(M2)"
+	textix="$(P2):$(Q2)"
 }
 "text update" {
 	object {
@@ -153,7 +153,7 @@ text {
 		height=20
 	}
 	monitor {
-		chan="$(P3):$(M3):getVal"
+		chan="$(P3):$(Q3):getVal"
 		clr=60
 		bclr=14
 	}
@@ -172,7 +172,7 @@ text {
 	"basic attribute" {
 		clr=14
 	}
-	textix="$(P3):$(M3)"
+	textix="$(P3):$(Q3)"
 }
 "related display" {
 	object {
@@ -184,12 +184,12 @@ text {
 	display[0] {
 		label="love Status"
 		name="loveStatus.adl"
-		args="P=$(P1),M=$(M1)"
+		args="P=$(P1),Q=$(Q1)"
 	}
 	display[1] {
 		label="love Data"
 		name="loveData.adl"
-		args="P=$(P1),M=$(M1)"
+		args="P=$(P1),Q=$(Q1)"
 	}
 	clr=14
 	bclr=51
@@ -204,12 +204,12 @@ text {
 	display[0] {
 		label="love Status"
 		name="loveStatus.adl"
-		args="P=$(P2),M=$(M2)"
+		args="P=$(P2),Q=$(Q2)"
 	}
 	display[1] {
 		label="love Data"
 		name="loveData.adl"
-		args="P=$(P2),M=$(M2)"
+		args="P=$(P2),Q=$(Q2)"
 	}
 	clr=14
 	bclr=51
@@ -224,12 +224,12 @@ text {
 	display[0] {
 		label="love Status"
 		name="loveStatus.adl"
-		args="P=$(P3),M=$(M3)"
+		args="P=$(P3),Q=$(Q3)"
 	}
 	display[1] {
 		label="love Data"
 		name="loveData.adl"
-		args="P=$(P3),M=$(M3)"
+		args="P=$(P3),Q=$(Q3)"
 	}
 	clr=14
 	bclr=51

@@ -1,12 +1,12 @@
 
 file {
-	name="/home/oxygen12/DKLINE/EPICS/synApps/support/love/work/medm/loveData.adl"
+	name="/home/oxygen12/DKLINE/EPICS/synApps/support/love/work/loveApp/op/adl/loveData.adl"
 	version=030003
 }
 display {
 	object {
-		x=101
-		y=269
+		x=55
+		y=89
 		width=209
 		height=325
 	}
@@ -97,7 +97,7 @@ text {
 	"basic attribute" {
 		clr=30
 	}
-	textix="$(P):$(M)"
+	textix="$(P):$(Q)"
 	align="horiz. centered"
 }
 "text entry" {
@@ -108,7 +108,7 @@ text {
 		height=20
 	}
 	control {
-		chan="$(P):$(M):getVal.DESC"
+		chan="$(P):$(Q):getVal.DESC"
 		clr=14
 		bclr=51
 	}
@@ -123,7 +123,7 @@ text {
 		height=20
 	}
 	monitor {
-		chan="$(P):$(M):getVal"
+		chan="$(P):$(Q):getVal"
 		clr=20
 		bclr=14
 	}
@@ -142,7 +142,7 @@ text {
 		height=20
 	}
 	monitor {
-		chan="$(P):$(M):getSP1"
+		chan="$(P):$(Q):getSP1"
 		clr=20
 		bclr=14
 	}
@@ -161,7 +161,7 @@ text {
 		height=20
 	}
 	monitor {
-		chan="$(P):$(M):getSP2"
+		chan="$(P):$(Q):getSP2"
 		clr=20
 		bclr=14
 	}
@@ -219,7 +219,7 @@ text {
 		height=20
 	}
 	monitor {
-		chan="$(P):$(M):getAlHi"
+		chan="$(P):$(Q):getAlHi"
 		clr=20
 		bclr=14
 	}
@@ -238,7 +238,7 @@ text {
 		height=20
 	}
 	monitor {
-		chan="$(P):$(M):getAlLo"
+		chan="$(P):$(Q):getAlLo"
 		clr=20
 		bclr=14
 	}
@@ -283,7 +283,7 @@ text {
 		height=20
 	}
 	monitor {
-		chan="$(P):$(M):getPeak"
+		chan="$(P):$(Q):getPeak"
 		clr=20
 		bclr=14
 	}
@@ -302,7 +302,7 @@ text {
 		height=20
 	}
 	monitor {
-		chan="$(P):$(M):getValley"
+		chan="$(P):$(Q):getValley"
 		clr=20
 		bclr=14
 	}
@@ -321,7 +321,7 @@ text {
 		height=20
 	}
 	monitor {
-		chan="$(P):$(M):getDecPts"
+		chan="$(P):$(Q):getDecPts"
 		clr=20
 		bclr=14
 	}
@@ -338,7 +338,7 @@ text {
 		height=20
 	}
 	monitor {
-		chan="$(P):$(M):getInpTyp"
+		chan="$(P):$(Q):getInpTyp"
 		clr=20
 		bclr=14
 	}
@@ -356,7 +356,7 @@ text {
 		height=20
 	}
 	monitor {
-		chan="$(P):$(M):getCommStatus"
+		chan="$(P):$(Q):getCommStatus"
 		clr=20
 		bclr=14
 	}
@@ -454,7 +454,7 @@ text {
 		height=20
 	}
 	monitor {
-		chan="$(P):$(M):getAlMode"
+		chan="$(P):$(Q):getAlMode"
 		clr=20
 		bclr=14
 	}
@@ -485,7 +485,7 @@ text {
 		height=20
 	}
 	monitor {
-		chan="$(P):$(M):getAlStatus"
+		chan="$(P):$(Q):getAlStatus"
 		clr=20
 		bclr=14
 	}

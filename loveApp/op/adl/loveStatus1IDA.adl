@@ -1,12 +1,12 @@
 
 file {
-	name="/home/oxygen12/DKLINE/EPICS/synApps/support/love/work/medm/loveStatus1IDA.adl"
+	name="/home/oxygen12/DKLINE/EPICS/synApps/support/love/work/loveApp/op/adl/loveStatus1IDA.adl"
 	version=030003
 }
 display {
 	object {
-		x=121
-		y=71
+		x=59
+		y=41
 		width=193
 		height=145
 	}
@@ -137,7 +137,7 @@ text {
 		height=30
 	}
 	monitor {
-		chan="$(P):$(M):Value"
+		chan="$(P):$(Q):Value"
 		clr=20
 		bclr=14
 	}
@@ -156,7 +156,7 @@ text {
 		height=25
 	}
 	monitor {
-		chan="$(P):$(M):SetPt1"
+		chan="$(P):$(Q):SetPt1"
 		clr=60
 		bclr=14
 	}
@@ -175,7 +175,7 @@ text {
 		height=25
 	}
 	monitor {
-		chan="$(P):$(M):SetPt2"
+		chan="$(P):$(Q):SetPt2"
 		clr=60
 		bclr=14
 	}
@@ -222,7 +222,7 @@ text {
 		height=25
 	}
 	monitor {
-		chan="$(P):$(M):AlarmHi"
+		chan="$(P):$(Q):AlarmHi"
 		clr=60
 		bclr=14
 	}
@@ -241,7 +241,7 @@ text {
 		height=25
 	}
 	monitor {
-		chan="$(P):$(M):AlarmLo"
+		chan="$(P):$(Q):AlarmLo"
 		clr=60
 		bclr=14
 	}
@@ -263,7 +263,7 @@ text {
 		clr=30
 		fill="outline"
 	}
-	textix="$(P):$(M)"
+	textix="$(P):$(Q)"
 	align="horiz. centered"
 }
 menu {
@@ -291,7 +291,7 @@ text {
 	}
 	"dynamic attribute" {
 		vis="if not zero"
-		chan="$(P):$(M):getAlStatus"
+		chan="$(P):$(Q):getAlStatus"
 	}
 	textix="In Alarm"
 	align="horiz. centered"
@@ -308,7 +308,7 @@ text {
 	}
 	"dynamic attribute" {
 		vis="if zero"
-		chan="$(P):$(M):getAlStatus"
+		chan="$(P):$(Q):getAlStatus"
 	}
 	textix="No Alarm"
 	align="horiz. centered"
