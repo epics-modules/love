@@ -1,70 +1,102 @@
+record(bo,"$(P):$(MODEL):Disable")
+{
+    field(ZNAM,"ENABLE")
+    field(ONAM,"DISABLE")
+}
 record(ai,"$(P):$(MODEL):getVal")
 {
-    #field(SCAN,".1 second")
+    field(DESC,"Love $(P):$(MODEL)")
+    field(SCAN,"2 second")
+    field(SDIS,"$(P):$(MODEL):Disable")
     field(DTYP,"devAsynLove")
     field(INP,"@asyn($(PORT),$(ADDR)) 0 $(MODEL)")
+    field(PREC,"1")
+}
+record(bi,"$(P):$(MODEL):getAlStatus")
+{
+    field(ZNAM,"NO ALARM")
+    field(ONAM,"IN ALARM")
+    field(SCAN,"2 second")
+    field(SDIS,"$(P):$(MODEL):Disable")
+    field(DTYP,"devAsynLove")
+    field(INP,"@asyn($(PORT),$(ADDR)) 7 $(MODEL)")
 }
 record(ai,"$(P):$(MODEL):getSP1")
 {
-    #field(SCAN,".1 second")
+    field(SCAN,"10 second")
+    field(SDIS,"$(P):$(MODEL):Disable")
     field(DTYP,"devAsynLove")
     field(INP,"@asyn($(PORT),$(ADDR)) 1 $(MODEL)")
+    field(PREC,"1")
 }
 record(ai,"$(P):$(MODEL):getSP2")
 {
-    #field(SCAN,".1 second")
+    field(SCAN,"10 second")
+    field(SDIS,"$(P):$(MODEL):Disable")
     field(DTYP,"devAsynLove")
     field(INP,"@asyn($(PORT),$(ADDR)) 2 $(MODEL)")
+    field(PREC,"1")
+    field(FLNK,"$(P):$(MODEL):getAlLo")
 }
 record(ai,"$(P):$(MODEL):getAlLo")
 {
+    field(SCAN,"10 second")
+    field(SDIS,"$(P):$(MODEL):Disable")
     field(DTYP,"devAsynLove")
     field(INP,"@asyn($(PORT),$(ADDR)) 3 $(MODEL)")
+    field(PREC,"1")
+    field(FLNK,"$(P):$(MODEL):getAlHi")
 }
 record(ai,"$(P):$(MODEL):getAlHi")
 {
+    field(SCAN,"1 second")
+    field(SDIS,"$(P):$(MODEL):Disable")
     field(DTYP,"devAsynLove")
     field(INP,"@asyn($(PORT),$(ADDR)) 4 $(MODEL)")
+    field(PREC,"1")
+    field(FLNK,"$(P):$(MODEL):getPeak")
 }
 record(ai,"$(P):$(MODEL):getPeak")
 {
-    #field(SCAN,".1 second")
+    field(SCAN,"10 second")
     field(DTYP,"devAsynLove")
     field(INP,"@asyn($(PORT),$(ADDR)) 5 $(MODEL)")
+    field(FLNK,"$(P):$(MODEL):getValley")
 }
 record(ai,"$(P):$(MODEL):getValley")
 {
-    #field(SCAN,".1 second")
+    field(SCAN,"10 second")
+    field(SDIS,"$(P):$(MODEL):Disable")
     field(DTYP,"devAsynLove")
     field(INP,"@asyn($(PORT),$(ADDR)) 6 $(MODEL)")
 }
 record(ai,"$(P):$(MODEL):getDecPts")
 {
-    #field(SCAN,".1 second")
+    field(SCAN,"1 second")
+    field(SDIS,"$(P):$(MODEL):Disable")
     field(DTYP,"devAsynLove")
     field(INP,"@asyn($(PORT),$(ADDR)) 11 $(MODEL)")
 }
-record(bi,"$(P):$(MODEL):getAlStatus")
-{
-    #field(SCAN,".1 second")
-    field(DTYP,"devAsynLove")
-    field(INP,"@asyn($(PORT),$(ADDR)) 7 $(MODEL)")
-}
 record(bi,"$(P):$(MODEL):getCommStatus")
 {
-    #field(SCAN,".1 second")
+    field(ZNAM,"LCL")
+    field(ONAM,"REM")
+    field(SCAN,"2 second")
+    field(SDIS,"$(P):$(MODEL):Disable")
     field(DTYP,"devAsynLove")
     field(INP,"@asyn($(PORT),$(ADDR)) 10 $(MODEL)")
 }
 record(mbbi,"$(P):$(MODEL):getAlMode")
 {
-    #field(SCAN,".1 second")
+    field(SCAN,"2 second")
+    field(SDIS,"$(P):$(MODEL):Disable")
     field(DTYP,"devAsynLove")
     field(INP,"@asyn($(PORT),$(ADDR)) 8 $(MODEL)")
 }
 record(mbbi,"$(P):$(MODEL):getInpTyp")
 {
-    #field(SCAN,".1 second")
+    field(SCAN,"2 second")
+    field(SDIS,"$(P):$(MODEL):Disable")
     field(DTYP,"devAsynLove")
     field(INP,"@asyn($(PORT),$(ADDR)) 9 $(MODEL)")
 }
