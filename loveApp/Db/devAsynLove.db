@@ -70,7 +70,7 @@ record(ai,"$(P):$(MODEL):getValley")
     field(DTYP,"devAsynLove")
     field(INP,"@asyn($(PORT),$(ADDR)) 6 $(MODEL)")
 }
-record(ai,"$(P):$(MODEL):getDecPts")
+record(longin,"$(P):$(MODEL):getDecPts")
 {
     field(SCAN,"1 second")
     field(SDIS,"$(P):$(MODEL):Disable")
