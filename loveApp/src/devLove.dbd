@@ -1,5 +1,9 @@
-device(ai,VME_IO,devAiLove,"Love Controller via MPF")
-device(bi,VME_IO,devBiLove,"Love Controller via MPF")
-device(mbbi,VME_IO,devMbbiLove,"Love Controller via MPF")
-device(ao,VME_IO,devAoLove,"Love Controller via MPF")
-device(bo,VME_IO,devBoLove,"Love Controller via MPF")
+
+# MPF-based Love Controller device support
+#
+
+device(ai,   VME_IO, devAiLove,   "Love Controller via MPF" )
+device(bi,   VME_IO, devBiLove,   "Love Controller via MPF" )
+device(ao,   VME_IO, devAoLove,   "Love Controller via MPF" )
+device(bo,   VME_IO, devBoLove,   "Love Controller via MPF" )
+device(mbbi, VME_IO, devMbbiLove, "Love Controller via MPF" )
