@@ -15,10 +15,6 @@ registrar(vipc616Registrar)
 # tyOctal support
 registrar(tyGSOctalRegistrar)
 
-#-----------------------------------------------------------------------------
-# MPF Love support
-include "devLove.dbd"
-
 
 #
 #=============================================================================
