@@ -1,17 +1,17 @@
 
 file {
-	name="/home/oxygen12/DKLINE/EPICS/synApps/ioc/Love/medm/lovControllers.adl"
+	name="/home/oxygen12/DKLINE/EPICS/synApps/support/love/work/medm/loveData.adl"
 	version=030003
 }
 display {
 	object {
-		x=53
-		y=55
+		x=101
+		y=269
 		width=209
 		height=325
 	}
 	clr=0
-	bclr=3
+	bclr=53
 	cmap=""
 	gridSpacing=5
 	gridOn=0
@@ -95,7 +95,7 @@ text {
 		height=15
 	}
 	"basic attribute" {
-		clr=14
+		clr=30
 	}
 	textix="$(P):$(M)"
 	align="horiz. centered"

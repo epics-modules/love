@@ -1,6 +1,6 @@
 
 file {
-	name="/home/oxygen12/DKLINE/EPICS/synApps/ioc/Love/medm/loveList.adl"
+	name="/home/oxygen12/DKLINE/EPICS/synApps/support/love/work/medm/loveList.adl"
 	version=030003
 }
 display {
@@ -11,7 +11,7 @@ display {
 		height=120
 	}
 	clr=14
-	bclr=4
+	bclr=52
 	cmap=""
 	gridSpacing=5
 	gridOn=0

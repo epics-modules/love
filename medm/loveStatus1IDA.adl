@@ -1,17 +1,17 @@
 
 file {
-	name="/home/oxygen12/DKLINE/EPICS/synApps/ioc/Love/medm/loveStatus1IDA.adl"
+	name="/home/oxygen12/DKLINE/EPICS/synApps/support/love/work/medm/loveStatus1IDA.adl"
 	version=030003
 }
 display {
 	object {
-		x=164
-		y=90
+		x=121
+		y=71
 		width=193
 		height=145
 	}
 	clr=0
-	bclr=8
+	bclr=59
 	cmap=""
 	gridSpacing=5
 	gridOn=0
@@ -252,17 +252,6 @@ text {
 		precDefault=3
 	}
 }
-rectangle {
-	object {
-		x=99
-		y=21
-		width=80
-		height=38
-	}
-	"basic attribute" {
-		clr=14
-	}
-}
 text {
 	object {
 		x=55
@@ -277,68 +266,6 @@ text {
 	textix="$(P):$(M)"
 	align="horiz. centered"
 }
-rectangle {
-	object {
-		x=110
-		y=27
-		width=10
-		height=10
-	}
-	"basic attribute" {
-		clr=30
-	}
-}
-rectangle {
-	object {
-		x=133
-		y=27
-		width=10
-		height=10
-	}
-	"basic attribute" {
-		clr=15
-	}
-}
-rectangle {
-	object {
-		x=133
-		y=27
-		width=10
-		height=10
-	}
-	"basic attribute" {
-		clr=15
-	}
-	"dynamic attribute" {
-		vis="if not zero"
-		chan="$(P):$(M):SetPt2Enable"
-	}
-}
-text {
-	object {
-		x=128
-		y=40
-		width=20
-		height=10
-	}
-	"basic attribute" {
-		clr=0
-		fill="outline"
-	}
-	textix="SP2"
-	align="horiz. centered"
-}
-rectangle {
-	object {
-		x=160
-		y=27
-		width=10
-		height=10
-	}
-	"basic attribute" {
-		clr=20
-	}
-}
 menu {
 	object {
 		x=0
@@ -352,62 +279,37 @@ menu {
 		bclr=51
 	}
 }
-rectangle {
-	object {
-		x=110
-		y=27
-		width=10
-		height=10
-	}
-	"basic attribute" {
-		clr=30
-	}
-	"dynamic attribute" {
-		vis="if not zero"
-		chan="$(P):$(M):SetPt1Enable"
-	}
-}
 text {
 	object {
-		x=104
-		y=40
-		width=20
-		height=10
-	}
-	"basic attribute" {
-		clr=0
-		fill="outline"
-	}
-	textix="SP1"
-	align="horiz. centered"
-}
-rectangle {
-	object {
-		x=160
-		y=27
-		width=10
-		height=10
+		x=113
+		y=29
+		width=69
+		height=16
 	}
 	"basic attribute" {
 		clr=20
 	}
 	"dynamic attribute" {
-		clr="alarm"
-		vis="if zero"
-		chan="$(P):$(M):AlarmEnable"
+		vis="if not zero"
+		chan="$(P):$(M):getAlStatus"
 	}
+	textix="In Alarm"
+	align="horiz. centered"
 }
 text {
 	object {
-		x=155
-		y=40
-		width=20
-		height=10
+		x=113
+		y=29
+		width=69
+		height=16
 	}
 	"basic attribute" {
-		clr=0
-		fill="outline"
+		clr=60
 	}
-	textix="Alrm"
+	"dynamic attribute" {
+		vis="if zero"
+		chan="$(P):$(M):getAlStatus"
+	}
+	textix="No Alarm"
 	align="horiz. centered"
 }
