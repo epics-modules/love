@@ -2212,17 +2212,17 @@ static long ai__read( struct aiRecord* pai )
     rLOVREC* prLov;
 
 
+    /* Initialize local variants */
+    prLov = (rLOVREC*)pai->dpvt;
+
     /* Validate device private pointer */
-    if( pai->dpvt == NULL)
+    if( prLov == NULL)
     {
        pai->pact = LOV__K_ACTIVE;
        asynPrint( prLov->pasynUser, ASYN_TRACE_ERROR, "devAsynLove::ai__read dpvt is NULL \"%s\"\n", pai->name );
 
        return( LOV__STS_OKNOVAL );
     }
-
-    /* Initialize local variants */
-    prLov = (rLOVREC*)pai->dpvt;
 
     /* When process record in inactive (pact = 0) */
     if( pai->pact == LOV__K_INACTIVE )
@@ -2322,17 +2322,17 @@ static long ao__write( struct aoRecord* pao )
     rLOVREC* prLov;
 
 
+    /* Initialize  variants */
+    prLov = (rLOVREC*)pao->dpvt;
+
     /* Validate device private pointer */
-    if( pao->dpvt == NULL)
+    if( prLov == NULL)
     {
        pao->pact = LOV__K_ACTIVE;
        asynPrint( prLov->pasynUser, ASYN_TRACE_ERROR, "devAsynLove::ao__write dpvt is NULL \"%s\"\n", pao->name );
 
        return( LOV__STS_OKNOVAL );
     }
-
-    /* Initialize  variants */
-    prLov = (rLOVREC*)pao->dpvt;
 
     /* When process record is inactive (pact = 0) */
     if( pao->pact == LOV__K_INACTIVE )
@@ -2436,17 +2436,17 @@ static long bi__read( struct biRecord* pbi )
     rLOVREC* prLov;
 
 
+    /* Initialize local variants */
+    prLov = (rLOVREC*)pbi->dpvt;
+
     /* Validate device private pointer */
-    if( pbi->dpvt == NULL)
+    if( prLov == NULL)
     {
        pbi->pact = LOV__K_ACTIVE;
        asynPrint( prLov->pasynUser, ASYN_TRACE_ERROR, "devAsynLove::bi__read dpvt is NULL \"%s\"\n", pbi->name );
 
        return( LOV__STS_OKNOVAL );
     }
-
-    /* Initialize local variants */
-    prLov = (rLOVREC*)pbi->dpvt;
 
     /* When process record in inactive (pact = 0) */
     if( pbi->pact == LOV__K_INACTIVE )
@@ -2547,17 +2547,17 @@ static long bo__write( struct boRecord* pbo )
     rLOVREC* prLov;
 
 
+    /* Initialize local variants */
+    prLov = (rLOVREC*)pbo->dpvt;
+
     /* Validate device private pointer */
-    if( pbo->dpvt == NULL)
+    if( prLov == NULL)
     {
        pbo->pact = LOV__K_ACTIVE;
        asynPrint( prLov->pasynUser, ASYN_TRACE_ERROR, "devAsynLove::bo__write dpvt is NULL \"%s\"\n", pbo->name );
 
        return( LOV__STS_OKNOVAL );
     }
-
-    /* Initialize local variants */
-    prLov = (rLOVREC*)pbo->dpvt;
 
     /* When process record in inactive (pact = 0) */
     if( pbo->pact == LOV__K_INACTIVE )
@@ -2658,17 +2658,17 @@ static long mbbi__read( struct mbbiRecord* pmbbi )
     rLOVREC* prLov;
 
 
+    /* Initialize local variants */
+    prLov = (rLOVREC*)pmbbi->dpvt;
+
     /* Validate device private pointer */
-    if( pmbbi->dpvt == NULL)
+    if( prLov == NULL)
     {
        pmbbi->pact = LOV__K_ACTIVE;
        asynPrint( prLov->pasynUser, ASYN_TRACE_ERROR, "devAsynLove::mbbi__read dpvt is NULL \"%s\"\n", pmbbi->name );
 
        return( LOV__STS_OKNOVAL );
     }
-
-    /* Initialize local variants */
-    prLov = (rLOVREC*)pmbbi->dpvt;
 
     /* When process record in inactive (pact = 0) */
     if( pmbbi->pact == LOV__K_INACTIVE )
