@@ -1,5 +1,5 @@
 #RELEASE Location of external products
-include $(TOP)/../config/MPFSERIAL_RELEASE
-include $(TOP)/../config/MPF_RELEASE
-include $(TOP)/../config/RELEASE
+MPF_SERIAL=
+MPF=
+EPICS_BASE=
 
