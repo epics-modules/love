@@ -13,8 +13,6 @@ $savedir = Cwd::getcwd();
 Cwd::chdir($top);
 $top_abs = Cwd::getcwd();
 Cwd::chdir($savedir);
-# Add TOP to macro list.
-$applications{TOP} = $top_abs;
 
 unlink("${outfile}");
 open(OUT,">${outfile}") or die "$! opening ${outfile}";
@@ -40,16 +38,14 @@ foreach $file (@files) {
 		#prefix = post
 		($prefix,$post) = /(.*)\s* \s*(.*)/;
 	    }
-	    else
-	    {
-		$base = $applications{$macro};
-		if ($base eq "")
-		{
-		    #print "error: $macro was not previously defined\n";
-		}
-		else
-		{
+	    else {
+#		$base = $applications{$macro};
+                if ($macro eq "TOP") {
+                    $base = $top;
 		    $post = $base . $post;
+		    #print "info: \$macro= $macro \$base= $base \$post= $post\n";
+                } else {
+		    print "error: $macro is not TOP\n";
 		}
 	    }
 	    push(@files,"$post")
@@ -63,16 +59,14 @@ foreach $file (@files) {
 		# prefix = post
 		($prefix,$post) = /(.*)\s*=\s*(.*)/;
 	    } else {
-		$base = $applications{$macro};
-		if ($base eq "") {
-		    #print "error: $macro was not previously defined\n";
-		} else {
+                if ($macro eq "TOP") {
+                    $base = $top_abs;
 		    $post = $base . $post;
+		    #print "info: \$macro= $macro \$base= $base \$post= $post\n";
+                } else {
+		    print "error: $macro is not TOP\n";
 		}
 	    }
-	    
-	    $prefix =~ s/^\s+|\s+$//g; # strip leading and trailing whitespace.
-	    $applications{$prefix} = $post;
 	    if ( -d "$post") { #check that directory exists
 		print OUT "\n";
 		if ( -d "$post/bin/$arch") { #check that directory exists
