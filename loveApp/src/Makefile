@@ -20,8 +20,8 @@ LIBRARY_IOC += love
 love_SRCS += devAsynLove.c
 love_SRCS += interposeLovelink.c
 
-love_SRCS_vxWorks += devLove.cc
-love_SRCS_vxWorks += loveServer.cc
+#love_SRCS_vxWorks += devLove.cc
+#love_SRCS_vxWorks += loveServer.cc
 
 love_LIBS += asyn
 love_LIBS += $(EPICS_BASE_IOC_LIBS)
@@ -56,7 +56,7 @@ loveApp_OBJS_vxWorks += $(EPICS_BASE_BIN)/vxComLibrary
 # Include libraries
 loveApp_Common_LIBS  += love asyn
 loveApp_Common_LIBS  += $(EPICS_BASE_IOC_LIBS)
-loveApp_vxWorks_LIBS += TyGSOctal Ipac mpf mpfEpics
+#loveApp_vxWorks_LIBS += TyGSOctal Ipac mpf mpfEpics
 
 loveApp_LIBS_DEFAULT += $(loveApp_Common_LIBS)
 loveApp_LIBS_vxWorks += $(loveApp_Common_LIBS) $(loveApp_vxWorks_LIBS)
