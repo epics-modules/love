@@ -1,8 +1,7 @@
 
                        LOVE CONTROLLER HARDWARE / WIRING
 
-The equipment used for the test is listed as below in addition to the
-connections.
+The typical equipment used is listed as below in addition to the connections.
 
 
 HARDWARE
@@ -21,6 +20,14 @@ HARDWARE
        2     RX
        3     TX
        5     GND
+
+    - RJ45 pinout
+
+      PIN    FUNC
+      ---    ----
+       4      RX
+       5      TX
+       3      GND
 
     - B & B electronics model 485LDRC RS232 to RS485 (2-wire) converter
 
