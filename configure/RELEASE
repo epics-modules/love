@@ -1,4 +1,4 @@
 #RELEASE Location of external products
-MPF=
-EPICS_BASE=
+MPF=/home/oxygen/MOONEY/epics/synApps_5_0/support/mpf/2-4-2
+EPICS_BASE=/net/beams/export/local/epics/baseR3.14.5
 
