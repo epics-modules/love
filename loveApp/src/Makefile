@@ -6,10 +6,14 @@ include $(TOP)/configure/CONFIG
 #=============================
 
 DBD += devLove.dbd
+DBD += devAsynLove.dbd
 
 LIBRARY_IOC_vxWorks += love
 
-love_SRCS += devLove.cc loveServer.cc
+love_SRCS += devLove.cc
+love_SRCS += loveServer.cc
+love_SRCS += devAsynLove.c
+love_SRCS += interposeLovelink.c
 love_LIBS += $(EPICS_BASE_IOC_LIBS)
 
 include $(TOP)/configure/RULES
