@@ -927,7 +927,7 @@ static long lov__report( int level )
             printf( "getPeak       " );
             break;
         case getValley:
-            printf( "getVally      " );
+            printf( "getValley     " );
             break;
         case getAlStatus:
             printf( "getAlStatus   " );
@@ -1859,7 +1859,7 @@ static void lov__ioCompletion( rLOVREC* prLov )
             int data;
 
             /* Convert message components */
-            sscanf( puMsg->rSigned.info, "%2d", &info );
+            sscanf( puMsg->rSigned.info, "%2x", &info );
             sscanf( puMsg->rSigned.data, "%4d", &data );
 
             /* Extract decimal points */
@@ -1888,7 +1888,7 @@ static void lov__ioCompletion( rLOVREC* prLov )
             int data;
 
             /* Extract configuration data */
-            sscanf( puMsg->rUnsigned.data, "%2d", &data );
+            sscanf( puMsg->rUnsigned.data, "%2x", &data );
 
             /* Indicate communication status (TRUE=remote, FALSE=local) */
             prLov->rawData.ulData = ( (data) ? TRUE : FALSE );
@@ -1901,7 +1901,7 @@ static void lov__ioCompletion( rLOVREC* prLov )
             int inpType;
 
             /* Extract input type data */
-            sscanf( puMsg->rUnsigned.data, "%2d", &inpType );
+            sscanf( puMsg->rUnsigned.data, "%2x", &inpType );
 
             /* Assign return input type raw data */
             prLov->rawData.lData = inpType;
@@ -2085,7 +2085,7 @@ static void lov__ioCompletion1600( rLOVREC* prLov )
             int inpType;
 
             /* Extract input type data */
-            sscanf( puMsg->rInpTyp.type, "%2d", &inpType );
+            sscanf( puMsg->rInpTyp.type, "%2x", &inpType );
 
             /* Assign return input type raw data */
             prLov->rawData.lData = inpType;
