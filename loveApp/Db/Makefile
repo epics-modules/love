@@ -12,6 +12,7 @@ include $(TOP)/configure/CONFIG
 # databases, templates, substitutions like this
 DB += asynRecord.db
 DB += devAsynLove.db
+DB += devAsynLove1IDA.db
 
 #----------------------------------------------------
 # If <anyname>.db template is not named <anyname>*.template add
