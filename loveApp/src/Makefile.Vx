@@ -1,8 +1,0 @@
-# Makefile.Vx
-TOP = ../../..
-include $(TOP)/config/CONFIG_APP
-
-PROD += devLove.o 
-PROD += loveServer.o
-
-include $(TOP)/config/RULES.Vx

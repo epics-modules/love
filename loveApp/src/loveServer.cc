@@ -590,8 +590,9 @@ bool Love::xact(const char *port, int addr, const char* cmdBuf)
     for (int x =0; x<= loveSeverDelay; x++) {
 	y++;
     }	
-    int status = pSerialPort->writeRead(
+    serialStatus status = pSerialPort->write(
         (unsigned char *)cmdBuf,::strlen(cmdBuf),loveTimeout);
+    status = pSerialPort->read(loveTimeout);
     readBuf[nextRead] = 0;
     if (nextRead < 5) {
     	status = -1;
