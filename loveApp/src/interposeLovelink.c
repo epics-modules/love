@@ -68,6 +68,10 @@
     4) asynStatus includes: asynSuccess, asynTimeout, asynOverflow,
        and asynError.
 
+ Source control info:
+    Modified by:    $Author: dkline $
+                    $Date: 2005-03-23 18:53:26 $
+                    $Revision: 1.5 $
 
  =============================================================================
  History:

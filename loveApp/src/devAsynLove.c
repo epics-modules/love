@@ -21,7 +21,7 @@
  -----------------------------------------------------------------------------
 
  Description
-    This module provides ASYN-based device support for the Love controllers,
+    This module provides Asyn-based device support for the Love controllers,
     specifically models 1600 and 16A and using EPICS base 3.14.6 or greater.
     Previous versions for Love support employed MPF and are implemented for
     eariler versions of EPICS base. Refer to the documentation directory
@@ -46,13 +46,13 @@
 
     The "INST_IO" address type is used to indicate the format of the INP and
     OUT field in the database (.db) file. Both fields have a format that is
-    defined by ASYN.
+    defined by Asyn.
 
     field(INP," @asyn(portName,contAddr) Cmd Model")
     field(OUT," @asyn(portName,contAddr) Cmd Model")
 
     Where:
-        portName - ASYN port name (i.e. "L0")
+        portName - Asyn port name (i.e. "L0")
         contAddr - Controller address in hex (i.e. 0x32)
         Cmd      - Controller command 0..19 (see TABLE 1)
         Model    - Controller model (i.e. 16A or 1600 only)
@@ -98,13 +98,18 @@
       BO             19       - Set Comm Local
                           TABLE 1
 
+ Source control info:
+    Modified by:    $Author: dkline $
+                    $Date: 2005-03-23 18:53:25 $
+                    $Revision: 1.6 $
 
  =============================================================================
  History:
  Author: David M. Kline
  -----------------------------------------------------------------------------
- 2005-Feb-22  DMK  Initial development for ASYN-based device support.
+ 2005-Feb-22  DMK  Initial development for Asyn-based device support.
  2005-Mar-21  DMK  Added suppport for the longin record type.
+                   Removed unnecessary code.
  -----------------------------------------------------------------------------
 
 -*/
@@ -253,25 +258,6 @@ struct rLOVREC;
 /* Define enumerators */
 typedef enum
 {
-    model16A,
-    model32A,
-    model1600,
-    model2600,
-    model8600,
-    maxModel
-
-} eModelType;
-
-typedef enum
-{
-    noSup,
-    yaSup,
-    maxSup
-
-} eSupType;
-
-typedef enum
-{
     inpFunc,
     outFunc,
     maxFunc
@@ -337,99 +323,15 @@ typedef union uDATATYPE
 } uDATATYPE;
 
 
-/* Declare 1600 message structures */
-typedef struct rREADBACK_VALUE_1600
-{
-    char addr[2];
-    char stat[4];
-    char data[4];
-
-} rREADBACK_VALUE_1600;
-
-typedef struct rREADBACK_STATUS_1600
-{
-    char addr[2];
-    char stat[10];
-
-} rREADBACK_STATUS_1600;
-
-typedef struct rREADBACK_SIGNED_1600
-{
-    char addr[2];
-    char sign[2];
-    char data[4];
-
-} rREADBACK_SIGNED_1600;
-
-typedef struct rREADBACK_UNSIGNED_1600
-{
-    char addr[2];
-    char pad[2];
-    char data[4];
-
-} rREADBACK_UNSIGNED_1600;
-
-typedef struct rREADBACK_CONFIG_1600
-{
-    char addr[2];
-    char config[2];
-
-} rREADBACK_CONFIG_1600;
-
-typedef struct rREADBACK_INPTYP_1600
-{
-    char addr[2];
-    char type[2];
-
-} rREADBACK_INPTYP_1600;
-
-typedef struct rREADBACK_DECPT_1600
-{
-    char addr[2];
-    char decpt[2];
-
-} rREADBACK_DECPT_1600;
-
-typedef struct rREADBACK_ALMODE_1600
-{
-    char addr[2];
-    char mode[2];
-
-} rREADBACK_ALMODE_1600;
-
-typedef struct rREADBACK_TUNEMODE_1600
-{
-    char addr[2];
-    char mode[2];
-
-} rREADBACK_TUNEMODE_1600;
-
-typedef struct rREADBACK_WRITERESP_1600
-{
-    char addr[2];
-    char resp[2];
-
-} rREADBACK_WRITERESP_1600;
-
-typedef union uREADBACK_1600
-{
-    char                     rawMsg[LOV__S_BUFMAX];
-    rREADBACK_VALUE_1600     rValue;
-    rREADBACK_STATUS_1600    rStatus;
-    rREADBACK_SIGNED_1600    rSigned;
-    rREADBACK_UNSIGNED_1600  rUnsigned;
-    rREADBACK_CONFIG_1600    rConfig;
-    rREADBACK_INPTYP_1600    rInpTyp;
-    rREADBACK_DECPT_1600     rDecPt;
-    rREADBACK_ALMODE_1600    rAlMode;
-    rREADBACK_TUNEMODE_1600  rTuneMode;
-    rREADBACK_WRITERESP_1600 rWriteResp;
-
-} uREADBACK_1600;
-
-
 /* Declare message structures */
-typedef struct rREADBACK_VALUE      /* 00 */
+typedef struct rREADBACK_DATA
+{
+    char addr[2];
+    char data[2];
+
+} rREADBACK_DATA;
+
+typedef struct rREADBACK_VALUE
 {
     char addr[2];
     char stat[4];
@@ -437,15 +339,7 @@ typedef struct rREADBACK_VALUE      /* 00 */
 
 } rREADBACK_VALUE;
 
-typedef struct rREADBACK_STATUS     /* 05 */
-{
-    char addr[2];
-    char stat[4];
-    char unused[6];
-
-} rREADBACK_STATUS;
-
-typedef struct rREADBACK_SIGNED     /* 01XX */
+typedef struct rREADBACK_SIGNED
 {
     char addr[2];
     char info[2];
@@ -453,28 +347,12 @@ typedef struct rREADBACK_SIGNED     /* 01XX */
 
 } rREADBACK_SIGNED;
 
-typedef struct rREADBACK_UNSIGNED   /* 03XX */
-{
-    char addr[2];
-    char data[2];
-
-} rREADBACK_UNSIGNED;
-
-typedef struct rREADBACK_WRITERESP
-{
-    char addr[2];
-    char resp[2];
-
-} rREADBACK_WRITERESP;
-
 typedef union uREADBACK
 {
-    char                rawMsg[LOV__S_BUFMAX];
-    rREADBACK_VALUE     rValue;
-    rREADBACK_STATUS    rStatus;
-    rREADBACK_SIGNED    rSigned;
-    rREADBACK_UNSIGNED  rUnsigned;
-    rREADBACK_WRITERESP rWriteResp;
+    char             rawMsg[LOV__S_BUFMAX];
+    rREADBACK_DATA   rData;
+    rREADBACK_VALUE  rValue;
+    rREADBACK_SIGNED rSigned;
 
 } uREADBACK;
 
@@ -482,12 +360,10 @@ typedef union uREADBACK
 /* Declare controller models structure */
 typedef struct rMODEL
 {
-    char*      strID;
-    eSupType   isSup;
-    eModelType modelType;
-    void       (*preProcess)(struct rLOVREC*);
-    void       (*ioCompletion)(struct rLOVREC*);
-    char*      strCmds[maxCmd];
+    char* strID;
+    void  (*preProcess)(struct rLOVREC*);
+    void  (*ioCompletion)(struct rLOVREC*);
+    char* strCmds[maxCmd];
 
 } rMODEL;
 
@@ -533,8 +409,8 @@ typedef struct rLOV__DSET
 
 
 /* Forward reference pre/post processing methods */
-static void lov__preProcess( rLOVREC* );
-static void lov__ioCompletion( rLOVREC* );
+static void lov__preProcess16A( rLOVREC* );
+static void lov__ioCompletion16A( rLOVREC* );
 static void lov__preProcess1600( rLOVREC* );
 static void lov__ioCompletion1600( rLOVREC* );
 
@@ -555,7 +431,7 @@ static double lov__convFactor[maxFunc][4] =
 static const rMODEL lov__supModels[] =      /* Supported models */
 {
     {
-        "16A",  yaSup, model16A,  lov__preProcess, lov__ioCompletion,
+        "16A",  lov__preProcess16A, lov__ioCompletion16A,
             {  "00",    /*  0 - getValue      */
                "0101",  /*  1 - getSP1        */
                "0105",  /*  2 - getSP2        */
@@ -580,32 +456,7 @@ static const rMODEL lov__supModels[] =      /* Supported models */
     },
 
     {
-        "32A",  noSup, model32A,  lov__preProcess, lov__ioCompletion,
-            {  "00",    /*  0 - getValue      */
-               "0101",  /*  1 - getSP1        */
-               "0105",  /*  2 - getSP2        */
-               "0106",  /*  3 - getAlLo       */
-               "0107",  /*  4 - getAlHi       */
-               "011D",  /*  5 - getPeak       */
-               "011E",  /*  6 - getValley     */
-               "00",    /*  7 - getAlStatus   */
-               "031D",  /*  8 - getAlMode     */
-               "0317",  /*  9 - getInpType    */
-               "0324",  /* 10 - getCommStatus */
-               "031A",  /* 11 - getDecPt      */
-               "0200",  /* 12 - putSP1        */
-               "0204",  /* 13 - putSP2        */
-               "0207",  /* 14 - putAlLo       */
-               "0208",  /* 15 - putAlHi       */
-               "040A",  /* 16 - resetPeak     */
-               "040B",  /* 17 - resetValley   */
-               "0400",  /* 18 - setRemote     */
-               "0401"   /* 19 - setLocal      */
-            },
-    },
-
-    {
-        "1600", yaSup, model1600, lov__preProcess1600, lov__ioCompletion1600,
+        "1600", lov__preProcess1600, lov__ioCompletion1600,
             {  "00",    /*  0 - getValue      */
                "0100",  /*  1 - getSP1        */
                "0102",  /*  2 - getSP2        */
@@ -629,81 +480,6 @@ static const rMODEL lov__supModels[] =      /* Supported models */
             },
     },
 
-    {
-        "2600", noSup, model2600, lov__preProcess, lov__ioCompletion,
-            {  "00",    /*  0 - getValue      */
-               "0101",  /*  1 - getSP1        */
-               "0105",  /*  2 - getSP2        */
-               "0106",  /*  3 - getAlLo       */
-               "0107",  /*  4 - getAlHi       */
-               "011D",  /*  5 - getPeak       */
-               "011E",  /*  6 - getValley     */
-               "00",    /*  7 - getAlStatus   */
-               "031D",  /*  8 - getAlMode     */
-               "0317",  /*  9 - getInpType    */
-               "0324",  /* 10 - getCommStatus */
-               "031A",  /* 11 - getDecPt      */
-               "0200",  /* 12 - putSP1        */
-               "0204",  /* 13 - putSP2        */
-               "0207",  /* 14 - putAlLo       */
-               "0208",  /* 15 - putAlHi       */
-               "040A",  /* 16 - resetPeak     */
-               "040B",  /* 17 - resetValley   */
-               "0400",  /* 18 - setRemote     */
-               "0401"   /* 19 - setLocal      */
-            },
-    },
-
-    {
-        "8600", noSup, model8600, lov__preProcess, lov__ioCompletion,
-            {  "00",    /*  0 - getValue      */
-               "0101",  /*  1 - getSP1        */
-               "0105",  /*  2 - getSP2        */
-               "0106",  /*  3 - getAlLo       */
-               "0107",  /*  4 - getAlHi       */
-               "011D",  /*  5 - getPeak       */
-               "011E",  /*  6 - getValley     */
-               "00",    /*  7 - getAlStatus   */
-               "031D",  /*  8 - getAlMode     */
-               "0317",  /*  9 - getInpType    */
-               "0324",  /* 10 - getCommStatus */
-               "031A",  /* 11 - getDecPt      */
-               "0200",  /* 12 - putSP1        */
-               "0204",  /* 13 - putSP2        */
-               "0207",  /* 14 - putAlLo       */
-               "0208",  /* 15 - putAlHi       */
-               "040A",  /* 16 - resetPeak     */
-               "040B",  /* 17 - resetValley   */
-               "0400",  /* 18 - setRemote     */
-               "0401"   /* 19 - setLocal      */
-            },
-    },
-
-    {
-        NULL,   noSup, maxModel,  lov__preProcess, lov__ioCompletion,
-            {
-               NULL,    /*  0 */
-               NULL,    /*  1 */
-               NULL,    /*  2 */
-               NULL,    /*  3 */
-               NULL,    /*  4 */
-               NULL,    /*  5 */
-               NULL,    /*  6 */
-               NULL,    /*  7 */
-               NULL,    /*  8 */
-               NULL,    /*  9 */
-               NULL,    /* 10 */
-               NULL,    /* 11 */
-               NULL,    /* 12 */
-               NULL,    /* 13 */
-               NULL,    /* 14 */
-               NULL,    /* 15 */
-               NULL,    /* 16 */
-               NULL,    /* 17 */
-               NULL,    /* 18 */
-               NULL     /* 19 */
-            }
-    }
 };
 
 
@@ -901,27 +677,7 @@ static long lov__report( int level )
         printf( "\t%02d ", i );
         printf( "0x%2.2X ", prLov->iAddr );
 
-        switch( prLov->prModel->modelType )
-        {
-        case model16A:
-            printf( "16A  " );
-            break;
-        case model32A:
-            printf( "32A  " );
-            break;
-        case model1600:
-            printf( "1600 " );
-            break;
-        case model2600:
-            printf( "2600 " );
-            break;
-        case model8600:
-            printf( "8600 " );
-            break;
-        case maxModel:
-            printf( "INV  " );
-            break;
-        }
+        printf( "%-4s ", prLov->prModel->strID );
 
         switch( prLov->cmdType )
         {
@@ -1056,7 +812,7 @@ static long lov__report( int level )
  *    with the Love controllers.
  *
  * Input Parameters:
- *    pasynUser - Pointer to ASYN User structure.
+ *    pasynUser - Pointer to Asyn User structure.
  *
  * Output Parameters:
  *    None.
@@ -1345,7 +1101,7 @@ static asynStatus lov__recordInit(
     /* Output message */
     asynPrint( pasynUser, ASYN_TRACE_FLOW, "devAsynLove::lov__recordInit - %s\n", prRec->name );
 
-    /* Parse input ASYN-specific string */
+    /* Parse input Asyn-specific string */
     sts = pasynEpicsUtils->parseLink( pasynUser, prInp, &prLov->pportName, &prLov->iAddr, &puserParams );
     if( ASYN__IS_NOTOK(sts) )
     {
@@ -1435,7 +1191,7 @@ static asynStatus lov__recordInit(
  *
  * Description:
  *    This results in the callback method being called. It queues the request
- *    to the port thread dedicated to the ASYN port.
+ *    to the port thread dedicated to the Asyn port.
  *
  * Input Parameters:
  *    prRec  - Pointer to record.
@@ -1482,9 +1238,9 @@ static asynStatus lov__queueIt( dbCommon* prRec )
  *    in during record initialization.
  *
  * Input Parameters:
- *    pasynUser   - Pointer to ASYN user.
+ *    pasynUser   - Pointer to Asyn user.
  *    puserParams - Pointer to the user parameters.
- *    prLov       - Pointer to LOVREC structure.
+ *    prLov       - Pointer to rLOVREC structure.
  *
  * Output Parameters:
  *    None.
@@ -1520,16 +1276,7 @@ static asynStatus lov__validateParams( asynUser* pasynUser, char* puserParams, r
         /* Compare model strings */
         if( strcmp( model, lov__supModels[i].strID ) == 0 )
         {
-            /* Verify support */
-            if( lov__supModels[i].isSup == yaSup )
-            {
-                break;
-            }
-            else
-            {
-                asynPrint( pasynUser, ASYN_TRACE_ERROR, "devAsynLove::lov__validateParams::unsupport model type %s\n", lov__supModels[i].strID );
-            }
-
+            break;
         }
 
     }
@@ -1554,14 +1301,14 @@ static asynStatus lov__validateParams( asynUser* pasynUser, char* puserParams, r
 
 
 /*
- * lov__preProcess()
+ * lov__preProcess16A()
  *
  * Description:
  *    This method performs any requires 'pre' processing prior to
- *    executing the command.
+ *    executing the command specifically for a model 16A controller.
  *
  * Input Parameters:
- *    prLov     - Pointer to LOVREC structure.
+ *    prLov - Pointer to rLOVREC structure.
  *
  * Output Parameters:
  *    None.
@@ -1570,16 +1317,15 @@ static asynStatus lov__validateParams( asynUser* pasynUser, char* puserParams, r
  *    None.
  *
  * Developer notes:
- *    - For models other than a 1600, the decimal points must
- *      be acquired prior to a write operation only.
+ *    - The decimal points must be acquired only for a write operation.
  *    - Return status is placed in the Love structure status.
  *
  */
-static void lov__preProcess( rLOVREC* prLov )
+static void lov__preProcess16A( rLOVREC* prLov )
 {
 
     /* Output message */
-    asynPrint( prLov->pasynUser, ASYN_TRACE_FLOW, "devAsynLove::lov__preProcess\n" );
+    asynPrint( prLov->pasynUser, ASYN_TRACE_FLOW, "devAsynLove::lov__preProcess16A\n" );
 
     /* Assume success (unless otherwise indicated) */
     prLov->sts = asynSuccess;
@@ -1602,24 +1348,6 @@ static void lov__preProcess( rLOVREC* prLov )
     /* Complete command string given command type */
     switch( prLov->cmdType )
     {
-    case getValue:          /* AI-based commands */
-    case getSP1:
-    case getSP2:
-    case getAlLo:
-    case getAlHi:
-    case getPeak:
-    case getValley:
-    case getDecPt:
-        break;
-
-    case getAlStatus:       /* BI-based commands */
-    case getCommStatus:
-        break;
-
-    case getAlMode:         /* MBBI-based commands */
-    case getInpType:
-        break;
-
     case putSP1:            /* AO-based commands */
     case putSP2:
     case putAlLo:
@@ -1655,22 +1383,14 @@ static void lov__preProcess( rLOVREC* prLov )
         }
         break;
 
-    case resetPeak:         /* BO-based commands */
-    case resetValley:
-    case setRemote:
-    case setLocal:
-        break;
-
     default:
-        prLov->sts = asynError;
-        asynPrint( prLov->pasynUser, ASYN_TRACE_ERROR, "devAsynLove::lov__preProcess::invalid cmdType\n" );
         break;
     }
 
     /* Return to caller */
     return;
 
-} /* end-method: lov__preProcess() */
+} /* end-method: lov__preProcess16A() */
 
 
 /*
@@ -1681,7 +1401,7 @@ static void lov__preProcess( rLOVREC* prLov )
  *    executing the command specifically for a model 1600 controller.
  *
  * Input Parameters:
- *    prLov     - Pointer to LOVREC structure.
+ *    prLov - Pointer to rLOVREC structure.
  *
  * Output Parameters:
  *    None.
@@ -1717,24 +1437,6 @@ static void lov__preProcess1600( rLOVREC* prLov )
     /* Complete command string given command type */
     switch( prLov->cmdType )
     {
-    case getValue:          /* AI-based commands */
-    case getSP1:
-    case getSP2:
-    case getAlLo:
-    case getAlHi:
-    case getPeak:
-    case getValley:
-    case getDecPt:
-        break;
-
-    case getAlStatus:       /* BI-based commands */
-    case getCommStatus:
-        break;
-
-    case getAlMode:         /* MBBI-based commands */
-    case getInpType:
-        break;
-
     case putSP1:            /* AO-based commands */
     case putSP2:
     case putAlLo:
@@ -1770,16 +1472,8 @@ static void lov__preProcess1600( rLOVREC* prLov )
         }
         break;
 
-    case resetPeak:         /* BO-based commands */
-    case resetValley:
-    case setRemote:
-    case setLocal:
-        /* No further processing required */
-        break;
 
     default:
-        prLov->sts = asynError;
-        asynPrint( prLov->pasynUser, ASYN_TRACE_ERROR, "devAsynLove::lov__preProcess1600::invalid cmdType\n" );
         break;
     }
 
@@ -1790,14 +1484,14 @@ static void lov__preProcess1600( rLOVREC* prLov )
 
 
 /*
- * lov__ioCompletion()
+ * lov__ioCompletion16A()
  *
  * Description:
  *    This method performs any required IO completion during record
- *    processing specifically for a model non-1600 controller.
+ *    processing specifically for a model 16A controller.
  *
  * Input Parameters:
- *    prLov     - Pointer to LOVREC structure.
+ *    prLov - Pointer to rLOVREC structure.
  *
  * Output Parameters:
  *    None.
@@ -1809,13 +1503,13 @@ static void lov__preProcess1600( rLOVREC* prLov )
  *    - Return status is placed in the Love structure status.
  *
  */
-static void lov__ioCompletion( rLOVREC* prLov )
+static void lov__ioCompletion16A( rLOVREC* prLov )
 {
     uREADBACK *puMsg;
 
 
     /* Output message */
-    asynPrint( prLov->pasynUser, ASYN_TRACE_FLOW, "devAsynLove::lov__ioCompletion\n" );
+    asynPrint( prLov->pasynUser, ASYN_TRACE_FLOW, "devAsynLove::lov__ioCompletion16A\n" );
 
     /* Initialize local variants */
     prLov->sts = asynSuccess;
@@ -1908,7 +1602,7 @@ static void lov__ioCompletion( rLOVREC* prLov )
             int data;
 
             /* Extract configuration data */
-            sscanf( puMsg->rUnsigned.data, "%2x", &data );
+            sscanf( puMsg->rData.data, "%2x", &data );
 
             /* Indicate communication status (TRUE=remote, FALSE=local) */
             prLov->rawData.ulData = ( (data) ? TRUE : FALSE );
@@ -1921,7 +1615,7 @@ static void lov__ioCompletion( rLOVREC* prLov )
             int inpType;
 
             /* Extract input type data */
-            sscanf( puMsg->rUnsigned.data, "%2x", &inpType );
+            sscanf( puMsg->rData.data, "%2x", &inpType );
 
             /* Assign return input type raw data */
             prLov->rawData.lData = inpType;
@@ -1934,7 +1628,7 @@ static void lov__ioCompletion( rLOVREC* prLov )
             int decPt;
 
             /* Extract decimal points data */
-            sscanf( puMsg->rUnsigned.data, "%2d", &decPt );
+            sscanf( puMsg->rData.data, "%2d", &decPt );
 
             /* Assign return decimal points raw data */
             prLov->decPts        = decPt;
@@ -1948,7 +1642,7 @@ static void lov__ioCompletion( rLOVREC* prLov )
             int alMode;
 
             /* Extract alarm mode data */
-            sscanf( puMsg->rUnsigned.data, "%2x", &alMode );
+            sscanf( puMsg->rData.data, "%2x", &alMode );
 
             /* Assign return alarm mode raw data */
             prLov->rawData.ulData = alMode;
@@ -1968,13 +1662,13 @@ static void lov__ioCompletion( rLOVREC* prLov )
             int writeResp;
 
             /* Extract write response data */
-            sscanf( puMsg->rWriteResp.resp, "%2d", &writeResp );
+            sscanf( puMsg->rData.data, "%2d", &writeResp );
 
             /* Evaluate response */
             if( writeResp )
             {
                 prLov->sts = asynError;
-                asynPrint( prLov->pasynUser, ASYN_TRACE_ERROR, "devAsynLove::lov__ioCompletion::command not accepted\n" );
+                asynPrint( prLov->pasynUser, ASYN_TRACE_ERROR, "devAsynLove::lov__ioCompletion16A::command not accepted\n" );
             }
 
         }
@@ -1987,7 +1681,7 @@ static void lov__ioCompletion( rLOVREC* prLov )
     /* Return to caller */
     return;
 
-} /* end-method: lov__ioCompletion() */
+} /* end-method: lov__ioCompletion16A() */
 
 
 /*
@@ -1998,7 +1692,7 @@ static void lov__ioCompletion( rLOVREC* prLov )
  *    processing specifically for a model 1600 controller.
  *
  * Input Parameters:
- *    prLov     - Pointer to LOVREC structure.
+ *    prLov - Pointer to rLOVREC structure.
  *
  * Output Parameters:
  *    None.
@@ -2012,7 +1706,7 @@ static void lov__ioCompletion( rLOVREC* prLov )
  */
 static void lov__ioCompletion1600( rLOVREC* prLov )
 {
-    uREADBACK_1600 *puMsg;
+    uREADBACK* puMsg;
 
 
     /* Output message */
@@ -2020,7 +1714,7 @@ static void lov__ioCompletion1600( rLOVREC* prLov )
 
     /* Initialize local variants */
     prLov->sts = asynSuccess;
-    puMsg      = (uREADBACK_1600*)&prLov->rdBuf[0];
+    puMsg      = (uREADBACK*)&prLov->rdBuf[0];
 
     /* Post-process given command */
     switch( prLov->cmdType )
@@ -2072,7 +1766,7 @@ static void lov__ioCompletion1600( rLOVREC* prLov )
             int data;
 
             /* Convert message components */
-            sscanf( puMsg->rSigned.sign, "%2d", &sign );
+            sscanf( puMsg->rSigned.info, "%2d", &sign );
             sscanf( puMsg->rSigned.data, "%4d", &data );
 
             /* Convert data */
@@ -2092,7 +1786,7 @@ static void lov__ioCompletion1600( rLOVREC* prLov )
             int config;
 
             /* Extract configuration data */
-            sscanf( puMsg->rConfig.config, "%2d", &config );
+            sscanf( puMsg->rData.data, "%2d", &config );
 
             /* Indicate communication status (TRUE=remote, FALSE=local) */
             prLov->rawData.ulData = ( (config) ? TRUE : FALSE );
@@ -2105,7 +1799,7 @@ static void lov__ioCompletion1600( rLOVREC* prLov )
             int inpType;
 
             /* Extract input type data */
-            sscanf( puMsg->rInpTyp.type, "%2x", &inpType );
+            sscanf( puMsg->rData.data, "%2x", &inpType );
 
             /* Assign return input type raw data */
             prLov->rawData.lData = inpType;
@@ -2118,7 +1812,7 @@ static void lov__ioCompletion1600( rLOVREC* prLov )
             int decPt;
 
             /* Extract decimal points data */
-            sscanf( puMsg->rDecPt.decpt, "%2d", &decPt );
+            sscanf( puMsg->rData.data, "%2d", &decPt );
 
             /* Assign return decimal points raw data */
             prLov->decPts        = decPt;
@@ -2132,7 +1826,7 @@ static void lov__ioCompletion1600( rLOVREC* prLov )
             int alMode;
 
             /* Extract alarm mode data */
-            sscanf( puMsg->rAlMode.mode, "%2x", &alMode );
+            sscanf( puMsg->rData.data, "%2x", &alMode );
 
             /* Assign return alarm mode raw data */
             prLov->rawData.ulData = alMode;
@@ -2152,7 +1846,7 @@ static void lov__ioCompletion1600( rLOVREC* prLov )
             int writeResp;
 
             /* Extract write response data */
-            sscanf( puMsg->rWriteResp.resp, "%2d", &writeResp );
+            sscanf( puMsg->rData.data, "%2d", &writeResp );
 
             /* Evaluate response */
             if( writeResp )
@@ -2257,7 +1951,7 @@ static long li__read( struct longinRecord* pli )
         /* Call IO completion method */
         prLov->prModel->ioCompletion( prLov );
 
-        /* Evaluate ASYN completion status */
+        /* Evaluate Asyn completion status */
         if( ASYN__IS_OK(prLov->sts) )
         {
             pli->val = prLov->rawData.lData;
@@ -2366,7 +2060,7 @@ static long ai__read( struct aiRecord* pai )
         /* Call IO completion method */
         prLov->prModel->ioCompletion( prLov );
 
-        /* Evaluate ASYN completion status */
+        /* Evaluate Asyn completion status */
         if( ASYN__IS_OK(prLov->sts) )
         {
             pai->val = (prLov->rawData.dData * lov__convFactor[prLov->funcType][prLov->decPts]);
@@ -2479,7 +2173,7 @@ static long ao__write( struct aoRecord* pao )
         /* Call IO completion method */
         prLov->prModel->ioCompletion( prLov );
 
-        /* Evaluate ASYN completion status */
+        /* Evaluate Asyn completion status */
         if( ASYN__IS_OK(prLov->sts) )
         {
             pao->rbv = (epicsInt32)(prLov->rawData.dData * prLov->decPts);
@@ -2590,7 +2284,7 @@ static long bi__read( struct biRecord* pbi )
         /* Call IO completion method */
         prLov->prModel->ioCompletion( prLov );
 
-        /* Evaluate ASYN completion status */
+        /* Evaluate Asyn completion status */
         if( ASYN__IS_OK(prLov->sts) )
         {
             pbi->rval = prLov->rawData.ulData;
@@ -2701,7 +2395,7 @@ static long bo__write( struct boRecord* pbo )
         /* Call IO completion method */
         prLov->prModel->ioCompletion( prLov );
 
-        /* Evaluate ASYN completion status */
+        /* Evaluate Asyn completion status */
         if( ASYN__IS_OK(prLov->sts) )
         {
             pbo->rbv = prLov->rawData.ulData;
@@ -2812,7 +2506,7 @@ static long mbbi__read( struct mbbiRecord* pmbbi )
         /* Call IO completion method */
         prLov->prModel->ioCompletion( prLov );
 
-        /* Evaluate ASYN completion status */
+        /* Evaluate Asyn completion status */
         if( ASYN__IS_OK(prLov->sts) )
         {
             pmbbi->rval = prLov->rawData.ulData;
