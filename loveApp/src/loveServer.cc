@@ -12,6 +12,8 @@
 //  October 24, 2001
 //  Revised to add more functionality.  -Mohan Ramanathan
 //  March 5, 2002
+//  Changed soft delay (loveSeverDelay) to VxWorks task delay. - Ron Sluiter
+//  January 19, 2005
 /*
  *****************************************************************
  *                         COPYRIGHT NOTIFICATION
@@ -77,13 +79,6 @@
  
 static const int readBufSize = 30;
 double loveTimeout = 0.15;
-
-int loveSeverDelay=8000;  // used to delay in quick succession.
-/*
-loveServeDelay has a value of 8000 for PPC604 controller. All mv167, mv172 
-can have values of 0.  this is needed to delay the transmission of data
-on 485.  The devices need time to switch from transmitting to listening.
-*/
  
 enum readState {readIdle, readStart, readData};
 
@@ -585,11 +580,13 @@ bool Love::xact(const char *port, int addr, const char* cmdBuf)
     int error=0;
     state = readStart;
     nextRead = 0;
-//   Put a delay due to timing problem when using the PPC controller.
-    int y=0;
-    for (int x =0; x<= loveSeverDelay; x++) {
-	y++;
-    }	
+
+/*
+Delay for PPC604 controller. This is needed to delay the transmission of data
+on 485.  The devices need time to switch from transmitting to listening.
+*/
+    taskDelay(2);
+
     int status = pSerialPort->writeRead(
         (unsigned char *)cmdBuf,::strlen(cmdBuf),loveTimeout);
     readBuf[nextRead] = 0;
