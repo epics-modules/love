@@ -20,6 +20,7 @@ LIBRARY_IOC += love
 love_SRCS += devAsynLove.c
 love_SRCS += interposeLovelink.c
 
+# MPF is no longer supported
 #love_SRCS_vxWorks += devLove.cc
 #love_SRCS_vxWorks += loveServer.cc
 
