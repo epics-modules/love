@@ -7,6 +7,9 @@
 // Changed Again to reflect Love interface same as useing Bitbus. 
 //  Revised by Mohan Ramanathan
 // Date: May 14, 1999
+//
+// 28-Aug-2001 Mark Rivers
+//     Added (int) cast to call to writeRead to avoid compiler error
 
 
 extern "C" {
@@ -173,7 +176,7 @@ void Love::talk(Int32Message* preceive)
     if (loveServerDebug) 
         printf(" sending data (%d) : |%s|\n",len, out_data);
     
-    int status = pSerialPort->writeRead(out_data,len,preceive->timeout);
+    int status = pSerialPort->writeRead(out_data,len,(int)preceive->timeout);
     readBuf[nextRead] = 0;
 
     if (loveServerDebug) 
