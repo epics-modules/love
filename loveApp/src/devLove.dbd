@@ -1,0 +1,2 @@
+device(ai,VME_IO,devAiLove,"Love Controller via MPF")
+device(bi,VME_IO,devBiLove,"Love Controller via MPF")
