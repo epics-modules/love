@@ -1,0 +1,112 @@
+record(ai,"$(P):$(MODEL):getVal")
+{
+    field(SCAN,".1 second")
+    field(DTYP,"devAsynLove")
+    field(INP,"@asyn($(PORT),$(ADDR)) 0 $(MODEL)")
+}
+record(ai,"$(P):$(MODEL):getSP1")
+{
+    field(SCAN,".1 second")
+    field(DTYP,"devAsynLove")
+    field(INP,"@asyn($(PORT),$(ADDR)) 1 $(MODEL)")
+}
+record(ai,"$(P):$(MODEL):getSP2")
+{
+    field(SCAN,".1 second")
+    field(DTYP,"devAsynLove")
+    field(INP,"@asyn($(PORT),$(ADDR)) 2 $(MODEL)")
+}
+record(ai,"$(P):$(MODEL):getAlLo")
+{
+    #field(SCAN,".1 second")
+    field(DTYP,"devAsynLove")
+    field(INP,"@asyn($(PORT),$(ADDR)) 3 $(MODEL)")
+}
+record(ai,"$(P):$(MODEL):getAlHi")
+{
+    #field(SCAN,".1 second")
+    field(DTYP,"devAsynLove")
+    field(INP,"@asyn($(PORT),$(ADDR)) 4 $(MODEL)")
+}
+record(ai,"$(P):$(MODEL):getPeak")
+{
+    field(SCAN,".1 second")
+    field(DTYP,"devAsynLove")
+    field(INP,"@asyn($(PORT),$(ADDR)) 5 $(MODEL)")
+}
+record(ai,"$(P):$(MODEL):getValley")
+{
+    field(SCAN,".1 second")
+    field(DTYP,"devAsynLove")
+    field(INP,"@asyn($(PORT),$(ADDR)) 6 $(MODEL)")
+}
+record(ai,"$(P):$(MODEL):getDecPts")
+{
+    field(SCAN,".1 second")
+    field(DTYP,"devAsynLove")
+    field(INP,"@asyn($(PORT),$(ADDR)) 11 $(MODEL)")
+}
+record(bi,"$(P):$(MODEL):getAlStatus")
+{
+    field(SCAN,".1 second")
+    field(DTYP,"devAsynLove")
+    field(INP,"@asyn($(PORT),$(ADDR)) 7 $(MODEL)")
+}
+record(bi,"$(P):$(MODEL):getCommStatus")
+{
+    field(SCAN,".1 second")
+    field(DTYP,"devAsynLove")
+    field(INP,"@asyn($(PORT),$(ADDR)) 10 $(MODEL)")
+}
+record(mbbi,"$(P):$(MODEL):getAlMode")
+{
+    field(SCAN,".1 second")
+    field(DTYP,"devAsynLove")
+    field(INP,"@asyn($(PORT),$(ADDR)) 8 $(MODEL)")
+}
+record(mbbi,"$(P):$(MODEL):getInpTyp")
+{
+    field(SCAN,".1 second")
+    field(DTYP,"devAsynLove")
+    field(INP,"@asyn($(PORT),$(ADDR)) 9 $(MODEL)")
+}
+record(ao,"$(P):$(MODEL):putSP1")
+{
+    field(DTYP,"devAsynLove")
+    field(OUT,"@asyn($(PORT),$(ADDR)) 12 $(MODEL)")
+}
+record(ao,"$(P):$(MODEL):putSP2")
+{
+    field(DTYP,"devAsynLove")
+    field(OUT,"@asyn($(PORT),$(ADDR)) 13 $(MODEL)")
+}
+record(ao,"$(P):$(MODEL):putAlLo")
+{
+    field(DTYP,"devAsynLove")
+    field(OUT,"@asyn($(PORT),$(ADDR)) 14 $(MODEL)")
+}
+record(ao,"$(P):$(MODEL):putAlHi")
+{
+    field(DTYP,"devAsynLove")
+    field(OUT,"@asyn($(PORT),$(ADDR)) 15 $(MODEL)")
+}
+record(bo,"$(P):$(MODEL):resetPeak")
+{
+    field(DTYP,"devAsynLove")
+    field(OUT,"@asyn($(PORT),$(ADDR)) 16 $(MODEL)")
+}
+record(bo,"$(P):$(MODEL):resetValley")
+{
+    field(DTYP,"devAsynLove")
+    field(OUT,"@asyn($(PORT),$(ADDR)) 17 $(MODEL)")
+}
+record(bo,"$(P):$(MODEL):setRemote")
+{
+    field(DTYP,"devAsynLove")
+    field(OUT,"@asyn($(PORT),$(ADDR)) 18 $(MODEL)")
+}
+record(bo,"$(P):$(MODEL):setLocal")
+{
+    field(DTYP,"devAsynLove")
+    field(OUT,"@asyn($(PORT),$(ADDR)) 19 $(MODEL)")
+}
