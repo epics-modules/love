@@ -1,0 +1,11 @@
+Love controller Release Notice
+==============================
+
+R2-0
+====
+Converted to EPICS 3.14
+
+R1-3
+====
+
+Support for MPF R1-10's new "bind" call for DevMpf.
