@@ -6,8 +6,6 @@ include $(TOP)/config/CONFIG_APP
 
 DBDINSTALL += devLove.dbd
 
-INC += loveServer.h
-
 include $(TOP)/config/RULES.Host
 #----------------------------------------
 #  ADD RULES AFTER THIS LINE
