@@ -8,12 +8,12 @@
 include "base.dbd"
 
 #-----------------------------------------------------------------------------
-# ASYN support
+# Asyn serial support
 include "drvAsynSerialPort.dbd"
 
 #-----------------------------------------------------------------------------
-# ASYN Love support
-include "devAsynLove.dbd"
+# Love support
+include "devLove.dbd"
 
 
 #
