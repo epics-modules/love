@@ -7,7 +7,7 @@ The typical equipment used is listed as below in addition to the connections.
 HARDWARE
     - Tracewell systems VMEbus crate
     - MVME5100
-    - TVME200 IP carrier
+    - SBS 626 (TVME200) IP carrier
       - IP Octal RS232 module in slot A
     - SBS XM-OCTAL-IO
       - Default jumper settings
@@ -52,6 +52,7 @@ HARDWARE
     - Love controller (Model 1600 - 16163-992)
       - Configure to read 'Voltage' from a power supply
       - 9600 baud
+      - Host is set to 9600 baud,8 bits,no parity,1 stopbit,no flow control.
       - PIN 11 connected to B (+) on converter.
       - PIN 12 connected to A (-) on converter.
 
@@ -87,3 +88,10 @@ WIRING:
        +------- GND --- 5 -+     |         +-------------+
                            |     |
                            +-----+
+
+COMMUNICATION:
+    - STX = ^B
+    - ETX = ^C
+
+    - To read the SP1 from controller address 1:
+    	^B L 0 1 0 1 0 0 2 2 ^C
