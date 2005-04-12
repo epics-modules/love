@@ -95,7 +95,7 @@ display {
 		height=20
 	}
 	monitor {
-		chan="$(P1):$(Q1):getVal"
+		chan="$(P1):$(Q1):getValue"
 		clr=60
 		bclr=14
 	}
@@ -112,7 +112,7 @@ display {
 		height=20
 	}
 	monitor {
-		chan="$(P2):$(Q2):getVal"
+		chan="$(P2):$(Q2):getValue"
 		clr=60
 		bclr=14
 	}
@@ -153,7 +153,7 @@ text {
 		height=20
 	}
 	monitor {
-		chan="$(P3):$(Q3):getVal"
+		chan="$(P3):$(Q3):getValue"
 		clr=60
 		bclr=14
 	}

@@ -137,7 +137,7 @@ text {
 		height=30
 	}
 	monitor {
-		chan="$(P):$(Q):getVal"
+		chan="$(P):$(Q):getValue"
 		clr=20
 		bclr=14
 	}

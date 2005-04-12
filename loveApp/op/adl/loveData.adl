@@ -5,17 +5,17 @@ file {
 }
 display {
 	object {
-		x=55
-		y=89
-		width=209
-		height=325
+		x=82
+		y=36
+		width=356
+		height=658
 	}
 	clr=0
 	bclr=53
 	cmap=""
 	gridSpacing=5
 	gridOn=0
-	snapToGrid=1
+	snapToGrid=0
 }
 "color map" {
 	ncolors=65
@@ -89,42 +89,53 @@ display {
 }
 text {
 	object {
-		x=4
-		y=6
-		width=200
-		height=15
+		x=6
+		y=73
+		width=90
+		height=14
 	}
 	"basic attribute" {
-		clr=30
+		clr=0
+		fill="outline"
 	}
-	textix="$(P):$(Q)"
-	align="horiz. centered"
+	textix="Readout"
 }
-"text entry" {
+text {
 	object {
-		x=8
-		y=30
-		width=185
-		height=20
+		x=6
+		y=232
+		width=85
+		height=14
 	}
-	control {
-		chan="$(P):$(Q):getVal.DESC"
-		clr=14
-		bclr=51
+	"basic attribute" {
+		clr=0
+		fill="outline"
 	}
-	limits {
+	textix="Setpoint 1"
+}
+text {
+	object {
+		x=6
+		y=285
+		width=85
+		height=14
 	}
+	"basic attribute" {
+		clr=0
+		fill="outline"
+	}
+	textix="Setpoint 2"
 }
 "text update" {
 	object {
-		x=9
-		y=57
-		width=80
-		height=20
+		x=5
+		y=45
+		width=85
+		height=25
 	}
 	monitor {
-		chan="$(P):$(Q):getVal"
-		clr=20
+		chan="$(P):$(Q):getValue"
+		clr=15
 		bclr=14
 	}
 	clrmod="alarm"
@@ -136,14 +147,14 @@ text {
 }
 "text update" {
 	object {
-		x=9
-		y=95
-		width=80
-		height=20
+		x=5
+		y=204
+		width=85
+		height=25
 	}
 	monitor {
 		chan="$(P):$(Q):getSP1"
-		clr=20
+		clr=60
 		bclr=14
 	}
 	clrmod="alarm"
@@ -155,14 +166,14 @@ text {
 }
 "text update" {
 	object {
-		x=9
-		y=133
-		width=80
-		height=20
+		x=5
+		y=257
+		width=85
+		height=25
 	}
 	monitor {
 		chan="$(P):$(Q):getSP2"
-		clr=20
+		clr=60
 		bclr=14
 	}
 	clrmod="alarm"
@@ -174,53 +185,40 @@ text {
 }
 text {
 	object {
-		x=9
-		y=79
-		width=80
-		height=10
+		x=6
+		y=179
+		width=85
+		height=14
 	}
 	"basic attribute" {
 		clr=0
+		fill="outline"
 	}
-	textix="Readout"
-	align="horiz. centered"
+	textix="Alarm High"
 }
 text {
 	object {
-		x=9
-		y=117
-		width=80
-		height=10
+		x=6
+		y=126
+		width=85
+		height=14
 	}
 	"basic attribute" {
 		clr=0
+		fill="outline"
 	}
-	textix="Setpoint 1"
-	align="horiz. centered"
-}
-text {
-	object {
-		x=9
-		y=155
-		width=80
-		height=10
-	}
-	"basic attribute" {
-		clr=0
-	}
-	textix="Setpoint 2"
-	align="horiz. centered"
+	textix="Alarm Low"
 }
 "text update" {
 	object {
-		x=9
-		y=171
-		width=80
-		height=20
+		x=5
+		y=151
+		width=85
+		height=25
 	}
 	monitor {
 		chan="$(P):$(Q):getAlHi"
-		clr=20
+		clr=60
 		bclr=14
 	}
 	clrmod="alarm"
@@ -232,14 +230,14 @@ text {
 }
 "text update" {
 	object {
-		x=9
-		y=209
-		width=80
-		height=20
+		x=5
+		y=98
+		width=85
+		height=25
 	}
 	monitor {
 		chan="$(P):$(Q):getAlLo"
-		clr=20
+		clr=60
 		bclr=14
 	}
 	clrmod="alarm"
@@ -251,40 +249,41 @@ text {
 }
 text {
 	object {
-		x=8
-		y=193
-		width=80
-		height=10
+		x=102
+		y=3
+		width=250
+		height=20
 	}
 	"basic attribute" {
 		clr=0
+		fill="outline"
 	}
-	textix="Alarm High"
+	textix="Love Controller $(P):$(Q)"
 	align="horiz. centered"
 }
 text {
 	object {
-		x=9
-		y=231
-		width=80
-		height=10
+		x=6
+		y=338
+		width=85
+		height=14
 	}
 	"basic attribute" {
 		clr=0
+		fill="outline"
 	}
-	textix="Alarm Low"
-	align="horiz. centered"
+	textix="Peak"
 }
 "text update" {
 	object {
-		x=111
-		y=57
-		width=80
-		height=20
+		x=5
+		y=310
+		width=85
+		height=25
 	}
 	monitor {
 		chan="$(P):$(Q):getPeak"
-		clr=20
+		clr=60
 		bclr=14
 	}
 	clrmod="alarm"
@@ -294,16 +293,29 @@ text {
 		precDefault=3
 	}
 }
+text {
+	object {
+		x=6
+		y=391
+		width=84
+		height=14
+	}
+	"basic attribute" {
+		clr=0
+		fill="outline"
+	}
+	textix="Valley"
+}
 "text update" {
 	object {
-		x=111
-		y=95
-		width=80
-		height=20
+		x=5
+		y=363
+		width=85
+		height=25
 	}
 	monitor {
 		chan="$(P):$(Q):getValley"
-		clr=20
+		clr=60
 		bclr=14
 	}
 	clrmod="alarm"
@@ -315,147 +327,14 @@ text {
 }
 "text update" {
 	object {
-		x=111
-		y=133
-		width=80
-		height=20
-	}
-	monitor {
-		chan="$(P):$(Q):getDecPts"
-		clr=20
-		bclr=14
-	}
-	clrmod="alarm"
-	align="horiz. centered"
-	limits {
-	}
-}
-"text update" {
-	object {
-		x=111
-		y=171
-		width=80
-		height=20
-	}
-	monitor {
-		chan="$(P):$(Q):getInpTyp"
-		clr=20
-		bclr=14
-	}
-	clrmod="alarm"
-	align="horiz. centered"
-	format="hexadecimal"
-	limits {
-	}
-}
-"text update" {
-	object {
-		x=111
-		y=209
-		width=80
-		height=20
-	}
-	monitor {
-		chan="$(P):$(Q):getCommStatus"
-		clr=20
-		bclr=14
-	}
-	clrmod="alarm"
-	align="horiz. centered"
-	format="hexadecimal"
-	limits {
-		precSrc="default"
-		precDefault=1
-	}
-}
-text {
-	object {
-		x=112
-		y=79
-		width=80
-		height=10
-	}
-	"basic attribute" {
-		clr=0
-	}
-	textix="Peak"
-	align="horiz. centered"
-}
-text {
-	object {
-		x=112
-		y=117
-		width=80
-		height=10
-	}
-	"basic attribute" {
-		clr=0
-	}
-	textix="Valley"
-	align="horiz. centered"
-}
-text {
-	object {
-		x=111
-		y=155
-		width=80
-		height=10
-	}
-	"basic attribute" {
-		clr=0
-	}
-	textix="Decimal Points"
-	align="horiz. centered"
-}
-text {
-	object {
-		x=111
-		y=193
-		width=80
-		height=10
-	}
-	"basic attribute" {
-		clr=0
-	}
-	textix="Input Type"
-	align="horiz. centered"
-}
-text {
-	object {
-		x=111
-		y=231
-		width=80
-		height=10
-	}
-	"basic attribute" {
-		clr=0
-	}
-	textix="Comm Status"
-	align="horiz. centered"
-}
-text {
-	object {
-		x=10
-		y=269
-		width=80
-		height=10
-	}
-	"basic attribute" {
-		clr=0
-	}
-	textix="Alarm Status"
-	align="horiz. centered"
-}
-"text update" {
-	object {
-		x=9
-		y=285
-		width=80
-		height=20
+		x=5
+		y=416
+		width=85
+		height=25
 	}
 	monitor {
 		chan="$(P):$(Q):getAlMode"
-		clr=20
+		clr=60
 		bclr=14
 	}
 	clrmod="alarm"
@@ -466,32 +345,590 @@ text {
 }
 text {
 	object {
-		x=10
-		y=307
-		width=80
-		height=10
+		x=6
+		y=444
+		width=85
+		height=14
 	}
 	"basic attribute" {
 		clr=0
+		fill="outline"
 	}
-	textix="Alarm Mode"
-	align="horiz. centered"
+	textix="Alarm Type"
 }
 "text update" {
 	object {
-		x=9
-		y=247
-		width=80
-		height=20
+		x=5
+		y=469
+		width=85
+		height=25
 	}
 	monitor {
-		chan="$(P):$(Q):getAlStatus"
-		clr=20
+		chan="$(P):$(Q):getInpTyp"
+		clr=60
 		bclr=14
 	}
 	clrmod="alarm"
 	align="horiz. centered"
 	format="hexadecimal"
 	limits {
+	}
+}
+text {
+	object {
+		x=6
+		y=497
+		width=85
+		height=14
+	}
+	"basic attribute" {
+		clr=0
+		fill="outline"
+	}
+	textix="Input Type"
+}
+"text update" {
+	object {
+		x=5
+		y=522
+		width=85
+		height=25
+	}
+	monitor {
+		chan="$(P):$(Q):getCommStatus"
+		clr=60
+		bclr=14
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	format="string"
+	limits {
+	}
+}
+text {
+	object {
+		x=6
+		y=550
+		width=140
+		height=14
+	}
+	"basic attribute" {
+		clr=0
+		fill="outline"
+	}
+	textix="Communication Status"
+}
+menu {
+	object {
+		x=103
+		y=47
+		width=84
+		height=21
+	}
+	control {
+		chan="$(P):$(Q):getValue.SCAN"
+		clr=53
+		bclr=14
+	}
+}
+menu {
+	object {
+		x=103
+		y=205
+		width=84
+		height=21
+	}
+	control {
+		chan="$(P):$(Q):getSP1.SCAN"
+		clr=53
+		bclr=14
+	}
+}
+menu {
+	object {
+		x=103
+		y=313
+		width=84
+		height=21
+	}
+	control {
+		chan="$(P):$(Q):getPeak.SCAN"
+		clr=53
+		bclr=14
+	}
+}
+menu {
+	object {
+		x=103
+		y=153
+		width=84
+		height=21
+	}
+	control {
+		chan="$(P):$(Q):getAlHi.SCAN"
+		clr=53
+		bclr=14
+	}
+}
+menu {
+	object {
+		x=103
+		y=524
+		width=84
+		height=21
+	}
+	control {
+		chan="$(P):$(Q):getCommStatus.SCAN"
+		clr=53
+		bclr=14
+	}
+}
+menu {
+	object {
+		x=103
+		y=471
+		width=84
+		height=21
+	}
+	control {
+		chan="$(P):$(Q):getInpTyp.SCAN"
+		clr=53
+		bclr=14
+	}
+}
+menu {
+	object {
+		x=103
+		y=418
+		width=84
+		height=21
+	}
+	control {
+		chan="$(P):$(Q):getAlMode.SCAN"
+		clr=53
+		bclr=14
+	}
+}
+menu {
+	object {
+		x=103
+		y=100
+		width=84
+		height=21
+	}
+	control {
+		chan="$(P):$(Q):getAlLo.SCAN"
+		clr=53
+		bclr=14
+	}
+}
+menu {
+	object {
+		x=103
+		y=365
+		width=84
+		height=21
+	}
+	control {
+		chan="$(P):$(Q):getValley.SCAN"
+		clr=53
+		bclr=14
+	}
+}
+menu {
+	object {
+		x=103
+		y=258
+		width=84
+		height=21
+	}
+	control {
+		chan="$(P):$(Q):getSP2.SCAN"
+		clr=53
+		bclr=14
+	}
+}
+"message button" {
+	object {
+		x=263
+		y=366
+		width=60
+		height=20
+	}
+	control {
+		chan="$(P):$(Q):resetValley"
+		clr=25
+		bclr=55
+	}
+	label="RESET"
+	press_msg="1"
+}
+"message button" {
+	object {
+		x=263
+		y=314
+		width=60
+		height=20
+	}
+	control {
+		chan="$(P):$(Q):resetPeak"
+		clr=25
+		bclr=55
+	}
+	label="RESET"
+	press_msg="1"
+}
+"message button" {
+	object {
+		x=195
+		y=525
+		width=60
+		height=21
+	}
+	control {
+		chan="$(P):$(Q):getCommStatus.PROC"
+		clr=14
+		bclr=55
+	}
+	label="Process"
+	press_msg="1"
+}
+"message button" {
+	object {
+		x=195
+		y=100
+		width=60
+		height=21
+	}
+	control {
+		chan="$(P):$(Q):getAlLo.PROC"
+		clr=14
+		bclr=55
+	}
+	label="Process"
+	press_msg="1"
+}
+"message button" {
+	object {
+		x=195
+		y=206
+		width=60
+		height=21
+	}
+	control {
+		chan="$(P):$(Q):getSP1.PROC"
+		clr=14
+		bclr=55
+	}
+	label="Process"
+	press_msg="1"
+}
+"message button" {
+	object {
+		x=195
+		y=366
+		width=60
+		height=21
+	}
+	control {
+		chan="$(P):$(Q):getValley.PROC"
+		clr=14
+		bclr=55
+	}
+	label="Process"
+	press_msg="1"
+}
+"message button" {
+	object {
+		x=195
+		y=471
+		width=60
+		height=21
+	}
+	control {
+		chan="$(P):$(Q):getInpTyp.PROC"
+		clr=14
+		bclr=55
+	}
+	label="Process"
+	press_msg="1"
+}
+"message button" {
+	object {
+		x=195
+		y=153
+		width=60
+		height=21
+	}
+	control {
+		chan="$(P):$(Q):getAlHi.PROC"
+		clr=14
+		bclr=55
+	}
+	label="Process"
+	press_msg="1"
+}
+"message button" {
+	object {
+		x=195
+		y=418
+		width=60
+		height=21
+	}
+	control {
+		chan="$(P):$(Q):getAlMode.PROC"
+		clr=14
+		bclr=55
+	}
+	label="Process"
+	press_msg="1"
+}
+"message button" {
+	object {
+		x=195
+		y=47
+		width=60
+		height=21
+	}
+	control {
+		chan="$(P):$(Q):getValue.PROC"
+		clr=14
+		bclr=55
+	}
+	label="Process"
+	press_msg="1"
+}
+"message button" {
+	object {
+		x=195
+		y=314
+		width=60
+		height=21
+	}
+	control {
+		chan="$(P):$(Q):getPeak.PROC"
+		clr=14
+		bclr=55
+	}
+	label="Process"
+	press_msg="1"
+}
+"text entry" {
+	object {
+		x=263
+		y=205
+		width=85
+		height=25
+	}
+	control {
+		chan="$(P):$(Q):putSP1.VAL"
+		clr=20
+		bclr=14
+	}
+	limits {
+		precSrc="default"
+		precDefault=3
+	}
+}
+"message button" {
+	object {
+		x=195
+		y=258
+		width=60
+		height=21
+	}
+	control {
+		chan="$(P):$(Q):getSP2.PROC"
+		clr=14
+		bclr=55
+	}
+	label="Process"
+	press_msg="1"
+}
+"text entry" {
+	object {
+		x=263
+		y=256
+		width=85
+		height=25
+	}
+	control {
+		chan="$(P):$(Q):putSP2.VAL"
+		clr=20
+		bclr=14
+	}
+	limits {
+		precSrc="default"
+		precDefault=3
+	}
+}
+"text entry" {
+	object {
+		x=263
+		y=99
+		width=85
+		height=25
+	}
+	control {
+		chan="$(P):$(Q):putAlLo.VAL"
+		clr=20
+		bclr=14
+	}
+	limits {
+		precSrc="default"
+		precDefault=3
+	}
+}
+"text entry" {
+	object {
+		x=263
+		y=151
+		width=85
+		height=25
+	}
+	control {
+		chan="$(P):$(Q):putAlHi.VAL"
+		clr=20
+		bclr=14
+	}
+	limits {
+		precSrc="default"
+		precDefault=3
+	}
+}
+"message button" {
+	object {
+		x=258
+		y=513
+		width=60
+		height=20
+	}
+	control {
+		chan="$(P):$(Q):setLocal"
+		clr=25
+		bclr=55
+	}
+	label="LOCAL"
+	press_msg="1"
+}
+"message button" {
+	object {
+		x=258
+		y=536
+		width=60
+		height=20
+	}
+	control {
+		chan="$(P):$(Q):setRemote"
+		clr=25
+		bclr=55
+	}
+	label="REMOTE"
+	press_msg="1"
+}
+text {
+	object {
+		x=264
+		y=48
+		width=70
+		height=16
+	}
+	"basic attribute" {
+		clr=20
+	}
+	"dynamic attribute" {
+		vis="if not zero"
+		chan="$(P):$(Q):getAlStatus"
+	}
+	textix="In Alarm"
+	align="horiz. centered"
+}
+text {
+	object {
+		x=264
+		y=48
+		width=70
+		height=16
+	}
+	"basic attribute" {
+		clr=16
+	}
+	"dynamic attribute" {
+		vis="if zero"
+		chan="$(P):$(Q):getAlStatus"
+	}
+	textix="No Alarm"
+	align="horiz. centered"
+}
+"text update" {
+	object {
+		x=5
+		y=575
+		width=85
+		height=25
+	}
+	monitor {
+		chan="$(P):$(Q):getDecpts"
+		clr=60
+		bclr=14
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	format="string"
+	limits {
+	}
+}
+text {
+	object {
+		x=6
+		y=603
+		width=100
+		height=14
+	}
+	"basic attribute" {
+		clr=0
+		fill="outline"
+	}
+	textix="Decimal Points"
+}
+menu {
+	object {
+		x=103
+		y=577
+		width=84
+		height=21
+	}
+	control {
+		chan="$(P):$(Q):getDecpts.SCAN"
+		clr=53
+		bclr=14
+	}
+}
+"message button" {
+	object {
+		x=195
+		y=578
+		width=60
+		height=21
+	}
+	control {
+		chan="$(P):$(Q):getDecpts.PROC"
+		clr=14
+		bclr=55
+	}
+	label="Process"
+	press_msg="1"
+}
+menu {
+	object {
+		x=5
+		y=4
+		width=84
+		height=21
+	}
+	control {
+		chan="$(P):$(Q):Disable"
+		clr=14
+		bclr=51
 	}
 }
