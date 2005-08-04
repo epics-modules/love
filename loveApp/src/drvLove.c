@@ -22,7 +22,7 @@
 
  Description
     This module provides support for a multiple device port driver. To
-    initialize the driver, the method drvLoveInit is called from the
+    initialize the driver, the method drvLoveInit() is called from the
     startup script with the following calling sequence.
 
         drvLoveInit( lovPort, serPort, serAddr )
@@ -32,6 +32,18 @@
             serPort - Serial port driver name (i.e. "S0" )
             serAddr - Serial port driver address
 
+
+    Every controller must be configured prior to IOC initialization. Call
+    the method drvLoveConfig() from the startup script with the following
+    calling sequence.
+
+        drvLoveConfig( lovPort, addr, model )
+
+        Where:
+            lovPort - Love port driver name (i.e. "L0" )
+            addr    - Controller address on RS485.
+            model   - Controller model type, either 1600 or 16A.
+
     Prior to initializing the drvLove driver, the serial port driver
     (drvAsynSerialPort) must be initialized.
 
@@ -40,21 +52,11 @@
 
 
  Developer notes:
-    1) Command from device support:
-       Read  - <ADDR><COMMAND>
-       Write - <ADDR><COMMAND><DATA>
-    2) Command from Interpose layer to Love controller:
-       Read  - <STX>L<ADDR><COMMAND><CS><ETX>
-       Write - <STX>L<ADDR><COMMAND><DATA><CS><ETX>
-    3) Love controller command response to Interpose layer:
-       Read  - <STX>L<ADDR><COMMAND><DATA><CS><ACK>
-       Write - <STX>L<ADDR><COMMAND><CS><ACK>
-       Error - <STX>L<ADDR>N<CODE><ACK>
 
  Source control info:
     Modified by:    $Author: dkline $
-                    $Date: 2005-04-12 17:40:30 $
-                    $Revision: 1.1 $
+                    $Date: 2005-08-04 15:13:02 $
+                    $Revision: 1.2 $
 
  =============================================================================
  History:
@@ -62,6 +64,7 @@
  -----------------------------------------------------------------------------
  2005-Mar-25  DMK  Derived from lovelink interpose interface.
  2005-Mar-29  DMK  Initial development of the port driver complete.
+ 2005-Jul-21  DMK  Modified driver to support standard Asyn interfaces.
  -----------------------------------------------------------------------------
 
 */
@@ -69,7 +72,7 @@
 
 /* EPICS base version-specific definitions (must be performed first) */
 #include <epicsVersion.h>
-#define LT_EPICSBASE(v,r,l) ((EPICS_VERSION<=(v)) && (EPICS_REVISION<=(r)) && (EPICS_MODIFICATION<(l)))
+#define LT_EPICSBASE(v,r,l) (EPICS_VERSION<(v)||(EPICS_VERSION==(v)&&(EPICS_REVISION<(r)||(EPICS_REVISION==(r)&&EPICS_MODIFICATION<(l)))))
 
 
 /* Evaluate EPICS base */
@@ -86,31 +89,46 @@
 
 /* EPICS system related include files */
 #include <iocsh.h>
-#include <cantProceed.h>
 #include <epicsStdio.h>
+#include <cantProceed.h>
+#include <epicsString.h>
 #include <epicsExport.h>
+#include <epicsThread.h>
 
 
 /* EPICS synApps/Asyn related include files */
 #include <asynDriver.h>
+#include <asynInt32.h>
 #include <asynOctet.h>
+#include <asynDrvUser.h>
+#include <asynUInt32Digital.h>
 
 
 /* Define symbolic constants */
 #define K_INSTRMAX ( 256 )
 #define K_COMTMO   ( 1.0 )
+#define K_TUNE     ( 0.04 )
 
 
 /* Forward struct declarations */
+typedef struct Port Port;
+typedef struct Inst Inst;
+typedef struct Instr Instr;
+typedef struct CmdStr CmdStr;
+typedef struct CmdTbl CmdTbl;
 typedef struct Serport Serport;
-typedef struct Lovport Lovport;
-typedef struct Instrinfo Instrinfo;
+typedef union Readback Readback;
+
+
+/* Define model enum */
+typedef enum {model1600,model16A} Model;
 
 
 /* Declare instrument info structure */
-struct Instrinfo
+struct Instr
 {
-    int isConnected;
+    Model modidx;
+    int   isConn;
 };
 
 
@@ -119,68 +137,149 @@ struct Serport
 {
     char*       name;
     int         addr;
-    int         multiDevice;
+    int         isConn;
     int         canBlock;
+    int         multiDevice;
     int         autoConnect;
-    int         isConnected;
     asynUser*   pasynUser;
-    asynCommon* pasynCommon;
-    void*       commonPvt;
     asynOctet*  pasynOctet;
-    void*       octetPvt;
+    void*       pasynOctetPvt;
 };
 
 
 /* Declare love port structure */
-struct Lovport
+struct Port
 {
-    Lovport*      pport;
+    Port*         pport;
 
     char*         name;
-    int           isConnected;
-    asynInterface octet;
-    asynInterface common;
-    asynUser*     pasynUser;
+    int           isConn;
     Serport*      pserport;
+    asynUser*     pasynUser;
+    asynInterface asynInt32;
+    asynInterface asynUInt32;
+    asynInterface asynCommon;
+    asynInterface asynDrvUser;
+    asynInterface asynLockPort;
     char          outMsg[20];
     char          inpMsg[20];
     char          tmpMsg[20];
-    Instrinfo     instr[K_INSTRMAX];
+    Instr         instr[K_INSTRMAX];
+};
+
+
+/* Define record instance struct */
+struct Inst
+{
+    Instr* pinfo;
+    Port* pport;
+    const CmdStr* pcmd;
+    asynStatus (*read)(Inst* pinst,epicsInt32* value);
+    asynStatus (*write)(Inst* pinst,epicsInt32* value);
+};
+
+
+/* Define command strings struct */
+struct CmdStr
+{
+    const char* read;
+    const char* write;
+};
+
+struct CmdTbl
+{
+    const char* pname;
+    asynStatus (*read)(Inst* pinst,epicsInt32* value);
+    asynStatus (*write)(Inst* pinst,epicsInt32* value);
+    CmdStr strings[2];
+};
+
+
+/* Define readback struct */
+union Readback
+{
+    struct
+    {
+        char data[2];
+    } State;
+
+    struct
+    {
+        char info[2];
+        char data[4];
+    } Signed;
+
+    struct
+    {
+        char stat[4];
+        char data[4];
+    } Value;
+
 };
 
 
 /* Define local variants */
-static Lovport* prList = NULL;
-static char inpEos = '\006';    /* ACK (^B) */
-static char outEos = '\003';    /* ETX (^C) */
+static Port* pports = NULL;
 
 static char* errCodes[] =
 {
-/* 00 */  "Not used.",
-/* 01 */  "Undefined command. Command not within acceptable range.",
-/* 02 */  "Checksum error on received data from Host.",
-/* 03 */  "Command not performed by instrument.",
-/* 04 */  "Illegal ASCII characters received.",
-/* 05 */  "Data field error. Not enough, too many, or improper positioning.",
-/* 06 */  "Undefined command. Command not within acceptable range.",
-/* 07 */  "Not used.",
-/* 08 */  "Hardware fault. Return to Factory for service.",
-/* 09 */  "Hardware fault. Return to Factory for service.",
-/* 10 */  "Undefined command. Command not within acceptable range."
+/* 00 */  "00 - Not used.",
+/* 01 */  "01 - Undefined command. Command not within acceptable range.",
+/* 02 */  "02 - Checksum error on received data from Host.",
+/* 03 */  "03 - Command not performed by instrument.",
+/* 04 */  "04 - Illegal ASCII characters received.",
+/* 05 */  "05 - Data field error. Not enough, too many, or improper positioning.",
+/* 06 */  "06 - Undefined command. Command not within acceptable range.",
+/* 07 */  "07 - Not used.",
+/* 08 */  "08 - Hardware fault. Return to Factory for service.",
+/* 09 */  "09 - Hardware fault. Return to Factory for service.",
+/* 10 */  "10 - Undefined command. Command not within acceptable range."
 };
 
+
+/* Define table and forward references for command response methods */
+static asynStatus getValue(Inst* pinst,epicsInt32* value);
+static asynStatus getStatus(Inst* pinst,epicsInt32* value);
+static asynStatus getSignedValue(Inst* pinst,epicsInt32* value);
+static asynStatus getData(Inst* pinst,epicsInt32* value);
+static asynStatus putData(Inst* pinst,epicsInt32* value);
+static asynStatus doNull(Inst* pinst,epicsInt32* value);
+
+static const CmdTbl CmdTable[] =
+{
+    /*Command  Read             Write    1600              16A      */
+    {"Value",  getValue,        doNull,  {{  "00",   NULL},{  "00",   NULL}}},
+    {"SP1",    getSignedValue,  putData, {{"0100", "0200"},{"0101", "0200"}}},
+    {"SP2",    getSignedValue,  putData, {{"0102", "0202"},{"0105", "0204"}}},
+    {"AlLo",   getSignedValue,  putData, {{"0104", "0204"},{"0106", "0207"}}},
+    {"AlHi",   getSignedValue,  putData, {{"0105", "0205"},{"0107", "0208"}}},
+    {"Peak",   getSignedValue,  doNull,  {{"011A",   NULL},{"011D",   NULL}}},
+    {"Valley", getSignedValue,  doNull,  {{"011B",   NULL},{"011E",   NULL}}},
+    {"AlSts",  getStatus,       doNull,  {{  "00",   NULL},{  "00",   NULL}}},
+    {"AlMode", getData,         doNull,  {{"0337",   NULL},{"031D",   NULL}}},
+    {"InpTyp", getData,         doNull,  {{"0323",   NULL},{"0317",   NULL}}},
+    {"ComSts", getData,         doNull,  {{"032A",   NULL},{"0324",   NULL}}},
+    {"Decpts", getData,         doNull,  {{"0324",   NULL},{"031A",   NULL}}}
+};
+static const int cmdCount = (sizeof(CmdTable) / sizeof(CmdTbl));
+
+
 /* Public forward references */
-int drvLoveInit(const char *lovPort,const char* serPort,int serAddr);
+int drvLoveInit(const char* lovPort,const char* serPort,int serAddr);
+int drvLoveConfig(const char* lovPort,int addr,const char *model);
 
 
 /* Forward references for support methods */
-static asynStatus initSerialPort(Lovport* plov,const char* serPort,int serAddr);
+static asynStatus initSerialPort(Port* plov,const char* serPort,int serAddr);
 static void exceptCallback(asynUser* pasynUser,asynException exception);
-static asynStatus lockPort(Lovport* plov,asynUser* pasynUser);
-static void unlockPort(Lovport* plov,asynUser* pasynUser);
 
-static asynStatus setDefaultEos(Lovport* plov);
-static asynStatus showFailure(asynUser* pasynUser,const char* pmethod);
+
+static asynStatus processWriteResponse(Port* pport);
+static asynStatus executeCommand(Port* pport,asynUser* pasynUser);
+static asynStatus sendCommand(void* ppvt,asynUser* pasynUser,const char* data);
+static asynStatus recvReply(void* ppvt,asynUser* pasynUser,char* data,size_t maxchars);
+
+static asynStatus setDefaultEos(Port* plov);
 static asynStatus evalMessage(size_t* pcount,char* pinp,asynUser* pasynUser,char* pout);
 static void calcChecksum(size_t count,const char* pdata,unsigned char* pcs);
 
@@ -192,17 +291,27 @@ static asynStatus disconnectIt(void* ppvt,asynUser* pasynUser);
 static asynCommon common = {reportIt,connectIt,disconnectIt};
 
 
-/* Forward references for asynOctet methods */
-static asynStatus flushIt(void* ppvt,asynUser* pasynUser);
-static asynStatus setInpEos(void* ppvt,asynUser* pasynUser,const char* eos,int eoslen);
-static asynStatus getInpEos(void* ppvt,asynUser* pasynUser,char* eos,int eossize,int* eoslen);
-static asynStatus setOutEos(void* ppvt,asynUser* pasynUser,const char* eos,int eoslen);
-static asynStatus getOutEos(void* ppvt,asynUser* pasynUser,char* eos,int eossize,int* eoslen);
-static asynStatus writeIt(void* ppvt,asynUser* pasynUser,const char* data,size_t numchars,size_t* pnbytesTransfered);
-static asynStatus writeRaw(void* ppvt,asynUser* pasynUser,const char* data,size_t numchars,size_t* pnbytesTransfered);
-static asynStatus readIt(void* ppvt,asynUser* pasynUser,char* data,size_t maxchars,size_t* pnbytesTransfered,int* peomReason);
-static asynStatus readRaw(void* ppvt,asynUser* pasynUser,char* data,size_t maxchars,size_t* pnbytesTransfered,int* peomReason);
-static asynOctet octet = {writeIt,writeRaw,readIt,readRaw,flushIt,NULL,NULL,setInpEos,getInpEos,setOutEos,getOutEos};
+/* Forward references for asynDrvUser methods */
+static asynStatus create(void* ppvt,asynUser* pasynUser,const char* drvInfo, const char** pptypeName,size_t* psize);
+static asynStatus destroy(void* ppvt,asynUser* pasynUser);
+static asynStatus getType(void* ppvt,asynUser* pasynUser,const char** pptypeName,size_t* psize);
+static asynDrvUser drvuser = {create,getType,destroy};
+
+
+/* asynLockPortNotify methods */
+static asynStatus lockPort(void *drvPvt,asynUser *pasynUser);
+static asynStatus unlockPort(void *drvPvt,asynUser *pasynUser);
+static asynLockPortNotify lockport = {lockPort,unlockPort};
+
+
+/* Forward references for asynInt32 methods */
+static asynStatus readInt32(void* ppvt,asynUser* pasynUser,epicsInt32* value);
+static asynStatus writeInt32(void* ppvt,asynUser* pasynUser,epicsInt32 value);
+
+
+/* Forward references for asynUInt32Digital methods */
+static asynStatus readUInt32(void* ppvt,asynUser* pasynUser,epicsUInt32* value,epicsUInt32 mask);
+static asynStatus writeUInt32(void* ppvt,asynUser* pasynUser,epicsUInt32 value,epicsUInt32 mask);
 
 
 /* Define macros */
@@ -213,21 +322,27 @@ static asynOctet octet = {writeIt,writeRaw,readIt,readRaw,flushIt,NULL,NULL,setI
 /****************************************************************************
  * Define public interface methods
  ****************************************************************************/
-int drvLoveInit(const char *lovPort,const char* serPort,int serAddr)
+int drvLoveInit(const char* lovPort,const char* serPort,int serAddr)
 {
     asynStatus sts;
     int len,attr;
-    Lovport* plov;
+    Port* plov;
     Serport* pser;
     asynUser* pasynUser;
+    asynInt32* pasynInt32;
+    asynUInt32Digital* pasynUInt32;
 
-
-    len = sizeof(Lovport) + sizeof(Serport) + strlen(lovPort) + strlen(serPort) + 2;
+    len = sizeof(Port) + sizeof(Serport) + sizeof(asynInt32) + sizeof(asynUInt32Digital);
+    len += strlen(lovPort) + strlen(serPort) + 2;
     plov = callocMustSucceed(len,sizeof(char),"drvLoveInit");
+
     pser = (Serport*)(plov + 1);
-    plov->name = (char*)(pser + 1);
+    pasynInt32 = (asynInt32*)(pser + 1);
+    pasynUInt32 = (asynUInt32Digital*)(pasynInt32 + 1);
+    plov->name = (char*)(pasynUInt32 + 1);
     pser->name = plov->name + strlen(lovPort) + 1;
 
+    plov->isConn = 0;
     plov->pserport = pser;
     strcpy(plov->name,lovPort);
 
@@ -236,13 +351,10 @@ int drvLoveInit(const char *lovPort,const char* serPort,int serAddr)
     {
         printf("drvLoveInit::failure to initialize serial port %s\n",serPort);
         free(plov);
-
         return( -1 );
     }
 
-    attr = ASYN_MULTIDEVICE;
-    attr |= (pser->canBlock ? ASYN_CANBLOCK : 0);
-
+    attr = (pser->canBlock)?(ASYN_MULTIDEVICE|ASYN_CANBLOCK):ASYN_MULTIDEVICE;
     sts = pasynManager->registerPort(lovPort,attr,pser->autoConnect,0,0);
     if( ISNOTOK(sts) )
     {
@@ -253,25 +365,62 @@ int drvLoveInit(const char *lovPort,const char* serPort,int serAddr)
         return( -1 );
     }
 
-    plov->common.interfaceType = asynCommonType;
-    plov->common.pinterface = &common;
-    plov->common.drvPvt = plov;
+    plov->asynCommon.interfaceType = asynCommonType;
+    plov->asynCommon.pinterface = &common;
+    plov->asynCommon.drvPvt = plov;
 
-    sts = pasynManager->registerInterface(lovPort,&plov->common);
+    sts = pasynManager->registerInterface(lovPort,&plov->asynCommon);
     if( ISNOTOK(sts) )
     {
         printf("drvLoveInit::failure to register asynCommon\n");
         return( -1 );
     }
 
-    plov->octet.interfaceType = asynOctetType;
-    plov->octet.pinterface = &octet;
-    plov->octet.drvPvt = plov;
+    plov->asynDrvUser.interfaceType = asynDrvUserType;
+    plov->asynDrvUser.pinterface = &drvuser;
+    plov->asynDrvUser.drvPvt = plov;
 
-    sts = pasynOctetBase->initialize(lovPort,&plov->octet,0,0,0);
+    sts = pasynManager->registerInterface(lovPort,&plov->asynDrvUser);
     if( ISNOTOK(sts) )
     {
-        printf("drvLoveInit::failure to initialize asynOctetBase\n");
+        printf("drvLoveInit::failure to register asynDrvUser\n");
+        return( -1 );
+    }
+
+    plov->asynLockPort.interfaceType = asynLockPortNotifyType;
+    plov->asynLockPort.pinterface = &lockport;
+    plov->asynLockPort.drvPvt = plov;
+
+    sts = pasynManager->registerInterface(lovPort,&plov->asynLockPort);
+    if( ISNOTOK(sts) )
+    {
+        printf("drvLoveInit::failure to register asynLockPort\n");
+        return( -1 );
+    }
+
+    pasynInt32->read = readInt32;
+    pasynInt32->write = writeInt32;
+    plov->asynInt32.interfaceType = asynInt32Type;
+    plov->asynInt32.pinterface = pasynInt32;
+    plov->asynInt32.drvPvt = plov;
+
+    sts = pasynInt32Base->initialize(lovPort,&plov->asynInt32);
+    if( ISNOTOK(sts) )
+    {
+        printf("drvLoveInit::failure to initialize asynInt32Base\n");
+        return( -1 );
+    }
+
+    pasynUInt32->read = readUInt32;
+    pasynUInt32->write = writeUInt32;
+    plov->asynUInt32.interfaceType = asynUInt32DigitalType;
+    plov->asynUInt32.pinterface = pasynUInt32;
+    plov->asynUInt32.drvPvt = plov;
+
+    sts = pasynUInt32DigitalBase->initialize(lovPort,&plov->asynUInt32);
+    if( ISNOTOK(sts) )
+    {
+        printf("drvLoveInit::failure to initialize asynUInt32DigitalBase\n");
         return( -1 );
     }
 
@@ -289,20 +438,18 @@ int drvLoveInit(const char *lovPort,const char* serPort,int serAddr)
     }
 
     sts = pasynManager->connectDevice(pasynUser,lovPort,-1);
-    if( ISOK(sts) )
-        plov->isConnected = 1;
-    else
+    if( ISNOTOK(sts) )
     {
         printf("drvLoveInit::failure to connect with device %s\n",lovPort);
-        plov->isConnected = 0;
+        plov->isConn = 0;
         return( -1 );
     }
 
     pasynManager->exceptionCallbackAdd(pser->pasynUser,exceptCallback);
 
-    if( prList )
-        plov->pport = prList;
-    prList = plov;
+    if( pports )
+        plov->pport = pports;
+    pports = plov;
 
     sts = setDefaultEos(plov);
     if( ISNOTOK(sts) )
@@ -315,13 +462,39 @@ int drvLoveInit(const char *lovPort,const char* serPort,int serAddr)
 }
 
 
-static asynStatus initSerialPort(Lovport* plov,const char* serPort,int serAddr)
+int drvLoveConfig(const char* lovPort,int addr,const char* model)
+{
+    Port* pport;
+
+    for( pport = pports; pport; pport = pport->pport )
+        if( epicsStrCaseCmp(pport->name,lovPort) == 0 )
+        {
+            if( epicsStrCaseCmp("1600",model) == 0 )
+                pport->instr[addr-1].modidx = model1600;
+            else if( epicsStrCaseCmp("16A",model) == 0 )
+                pport->instr[addr-1].modidx = model16A;
+            else
+            {
+                printf("drvLoveConfig::unsupported model \"%s\"",model);
+                return( -1 );
+            }
+            return( 0 );
+        }
+
+    printf("drvLoveConfig::failure to locate port %s\n",lovPort);
+    return( -1 );
+}
+
+
+/****************************************************************************
+ * Define private interface suppport methods
+ ****************************************************************************/
+static asynStatus initSerialPort(Port* plov,const char* serPort,int serAddr)
 {
     asynStatus sts;
     asynUser* pasynUser;
     Serport* pser = plov->pserport;
     asynInterface* pasynIface;
-
 
     pasynUser = pasynManager->createAsynUser(NULL,NULL);
     if( pasynUser == NULL )
@@ -339,6 +512,14 @@ static asynStatus initSerialPort(Lovport* plov,const char* serPort,int serAddr)
     if( ISNOTOK(sts) )
     {
         printf("initSerialPort::failure to determine if %s @ %d is multi device\n",serPort,serAddr);
+        pasynManager->disconnect(pasynUser);
+        pasynManager->freeAsynUser(pasynUser);
+        return( asynError );
+    }
+
+    if(pser->multiDevice)
+    {
+        printf("initSerialPort::%s cannot be configured as multi device\n",serPort);
         pasynManager->disconnect(pasynUser);
         pasynManager->freeAsynUser(pasynUser);
         return( asynError );
@@ -362,25 +543,11 @@ static asynStatus initSerialPort(Lovport* plov,const char* serPort,int serAddr)
         return( asynError );
     }
 
-    pasynIface = pasynManager->findInterface(pasynUser,asynCommonType,1);
-    if( pasynIface )
-    {
-        pser->pasynCommon = (asynCommon*)pasynIface->pinterface;
-        pser->commonPvt = pasynIface->drvPvt;
-    }
-    else
-    {
-        printf("initSerialPort::failure to find interface %s\n",asynCommonType);
-        pasynManager->disconnect(pasynUser);
-        pasynManager->freeAsynUser(pasynUser);
-        return( asynError );
-    }
-
     pasynIface = pasynManager->findInterface(pasynUser,asynOctetType,1);
     if( pasynIface )
     {
         pser->pasynOctet = (asynOctet*)pasynIface->pinterface;
-        pser->octetPvt = pasynIface->drvPvt;
+        pser->pasynOctetPvt = pasynIface->drvPvt;
     }
     else
     {
@@ -392,7 +559,7 @@ static asynStatus initSerialPort(Lovport* plov,const char* serPort,int serAddr)
 
     pser->addr = serAddr;
     pser->pasynUser = pasynUser;
-    pser->isConnected = 1;
+    pser->isConn = 1;
     strcpy(pser->name,serPort);
     pasynUser->userPvt = plov;
     pasynUser->timeout = K_COMTMO;
@@ -401,14 +568,10 @@ static asynStatus initSerialPort(Lovport* plov,const char* serPort,int serAddr)
 }
 
 
-/****************************************************************************
- * Define private interface suppport methods
- ****************************************************************************/
 static asynStatus evalMessage(size_t* pcount,char* pinp,asynUser* pasynUser,char* pout)
 {
     size_t len;
     asynStatus sts;
-
 
     asynPrint(pasynUser,ASYN_TRACE_FLOW,"drvLove::evalMessage\n");
 
@@ -418,7 +581,7 @@ static asynStatus evalMessage(size_t* pcount,char* pinp,asynUser* pasynUser,char
         int errNum;
 
         len = *pcount - 4;      /* Minus STX, FILTER, ADDR */
-        errNum = atol( pinp + len );
+        errNum = atol( pinp + 5 );
         sts = asynError;
 
         asynPrint(pasynUser,ASYN_TRACE_ERROR,"drvLove::evalMessage error message received \"%s\"\n",errCodes[errNum]);
@@ -467,18 +630,20 @@ static void calcChecksum(size_t count,const char* pdata,unsigned char* pcs)
 }
 
 
-static asynStatus setDefaultEos(Lovport* plov)
+static asynStatus setDefaultEos(Port* plov)
 {
     asynStatus sts;
+    char inpEos = '\006';
+    char outEos = '\003';
+    Serport* pser = plov->pserport;
 
-
-    sts = setInpEos((void*)plov,plov->pasynUser,&inpEos,1);
+    sts = pser->pasynOctet->setInputEos(pser->pasynOctetPvt,pser->pasynUser,&inpEos,1);
     if( ISOK(sts) )
         printf("drvLove::setDefaultEos Input EOS set to \\0%d\n",inpEos);
     else
         printf("drvLove::setDefaultEos Input EOS set failed to \\0%d\n",inpEos);
 
-    sts = setOutEos((void*)plov,plov->pasynUser,&outEos,1);
+    sts = pser->pasynOctet->setOutputEos(pser->pasynOctetPvt,pser->pasynUser,&outEos,1);
     if( ISOK(sts) )
         printf("drvLove::setDefaultEos Output EOS set to \\0%d\n",outEos);
     else
@@ -488,61 +653,42 @@ static asynStatus setDefaultEos(Lovport* plov)
 }
 
 
-static asynStatus showFailure(asynUser* pasynUser,const char* pmethod)
-{
-    asynStatus sts;
-    const char* name;
-
-
-    asynPrint(pasynUser,ASYN_TRACE_FLOW,"drvLove::showFailure\n");
-
-    sts = pasynManager->getPortName(pasynUser,&name);
-    if( ISNOTOK(sts) )
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,"%s, %s unsupported\n",name,pmethod);
-    else
-        asynPrint(pasynUser,ASYN_TRACE_ERROR,"drvLove::showFailure failure to acquire port name\n");
-
-    return( asynError );
-}
-
-
 static void exceptCallback(asynUser* pasynUser,asynException exception)
 {
     asynStatus sts;
-    int isConnected;
-    Lovport* plov = pasynUser->userPvt;
+    int isConn;
+    Port* plov = pasynUser->userPvt;
     Serport* pser = plov->pserport;
-
 
     asynPrint(pasynUser,ASYN_TRACE_FLOW,"drvLove::exceptionCallback\n");
 
-    sts = pasynManager->isConnected(pasynUser,&isConnected);
+    sts = pasynManager->isConnected(pasynUser,&isConn);
     if( ISNOTOK(sts) )
     {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,"drvLove::exceptionCallback failure to determine if %s is connected to %s\n",plov->name,pser->name);
         return;
     }
 
-    if( isConnected )
+    if( isConn )
         return;
 
-    if( plov->isConnected == 0 )
+    if( plov->isConn == 0 )
         return;
 
-    plov->isConnected = 0;
+    plov->isConn = 0;
     pasynManager->exceptionDisconnect(plov->pasynUser);
 }
 
 
-static asynStatus lockPort(Lovport* plov,asynUser* pasynUser)
+static asynStatus lockPort(void* drvPvt,asynUser* pasynUser)
 {
     asynStatus sts;
+    Port* plov = (Port*)drvPvt;
     Serport* pser = plov->pserport;
-
 
     asynPrint(pasynUser,ASYN_TRACE_FLOW,"drvLove::lockPort\n");
 
-    sts = pasynManager->lockPort(pser->pasynUser,1);
+    sts = pasynManager->lockPort(pser->pasynUser);
     if( ISNOTOK(sts) )
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,"%s error %s",pser->name,pser->pasynUser->errorMessage);
 
@@ -550,11 +696,11 @@ static asynStatus lockPort(Lovport* plov,asynUser* pasynUser)
 }
 
 
-static void unlockPort(Lovport* plov,asynUser* pasynUser)
+static asynStatus unlockPort(void* drvPvt,asynUser* pasynUser)
 {
     asynStatus sts;
+    Port* plov = (Port*)drvPvt;
     Serport* pser = plov->pserport;
-
 
     asynPrint(pasynUser,ASYN_TRACE_FLOW,"drvLove::unlockPort\n");
 
@@ -562,7 +708,253 @@ static void unlockPort(Lovport* plov,asynUser* pasynUser)
     if( ISNOTOK(sts) )
         asynPrint(pasynUser,ASYN_TRACE_ERROR,"drvLove::unlockPort %s error %s\n",pser->name,pser->pasynUser->errorMessage);
 
-    return;
+    return( asynSuccess );
+}
+
+
+static asynStatus executeCommand(Port* pport,asynUser* pasynUser)
+{
+    int i;
+    asynStatus sts;
+
+    asynPrint(pasynUser,ASYN_TRACE_FLOW,"drvLove::executeCommand\n");
+    pasynUser->timeout = K_COMTMO;
+
+    for( i = 0; i < 3; ++i )
+    {
+        epicsThreadSleep( K_TUNE );
+
+        sts = sendCommand(pport,pasynUser,pport->outMsg);
+        if( ISOK(sts) )
+            asynPrint(pasynUser,ASYN_TRACEIO_FILTER,"drvLove::executeCommand write \"%s\"\n",pport->outMsg);
+        else
+        {
+            if( sts == asynTimeout )
+            {
+                asynPrint(pasynUser,ASYN_TRACE_ERROR,"drvLove::executeCommand write timeout, retrying\n");
+                continue;
+            }
+
+            asynPrint(pasynUser,ASYN_TRACE_ERROR,"drvLove::executeCommand write failure - Sent \"%s\" \n",pport->outMsg);
+            return( sts );
+        }
+
+        sts = recvReply(pport,pasynUser,pport->inpMsg,sizeof(pport->inpMsg));
+        if( ISOK(sts) )
+            asynPrint(pasynUser,ASYN_TRACEIO_FILTER,"drvLove::executeCommand read \"%s\"\n",pport->inpMsg);
+        else
+        {
+            if( sts == asynTimeout )
+            {
+                asynPrint(pasynUser,ASYN_TRACE_ERROR,"drvLove::executeCommand read timeout, retrying\n");
+                continue;
+            }
+
+            asynPrint(pasynUser,ASYN_TRACE_ERROR,"drvLove::executeCommand read failure - Sent \"%s\" Rcvd \"%s\" \n",pport->outMsg,pport->inpMsg);
+            return( sts );
+        }
+
+        return( asynSuccess );
+    }
+
+    asynPrint(pasynUser,ASYN_TRACE_ERROR,"drvLove::executeCommand retries exceeded\n");
+    return( asynError );
+}
+
+
+static asynStatus processWriteResponse(Port* pport)
+{
+    int resp;
+
+
+    asynPrint(pport->pasynUser,ASYN_TRACE_FLOW,"drvLove::processWriteResponse\n" );
+
+    sscanf(pport->inpMsg,"%2d",&resp);
+    if( resp )
+    {
+        asynPrint(pport->pasynUser,ASYN_TRACE_ERROR,"drvLove::processWriteResponse write command failed\n" );
+        return( asynError );
+    }
+
+    return( asynSuccess );
+}
+
+
+static asynStatus sendCommand(void* ppvt,asynUser* pasynUser,const char* data)
+{
+    unsigned char cs;
+    asynStatus sts;
+    int addr;
+    size_t len,bytesXfer;
+    Port* plov = (Port*)ppvt;
+    Serport* pser = plov->pserport;
+
+    asynPrint(pasynUser,ASYN_TRACE_FLOW,"drvLove::sendCommand\n");
+
+    sts = pasynManager->getAddr(pasynUser,&addr);
+    if( ISNOTOK(sts) )
+        return( sts );
+
+    sprintf(plov->tmpMsg,"%02X%s",addr,data);
+    calcChecksum(strlen(plov->tmpMsg),plov->tmpMsg,&cs);
+    sprintf(plov->outMsg,"\002L%s%2X",plov->tmpMsg,cs);
+    len = strlen(plov->outMsg);
+
+    sts = pser->pasynOctet->write(pser->pasynOctetPvt,pser->pasynUser,data,len,&bytesXfer);
+    if( ISOK(sts) )
+        asynPrint(pasynUser,ASYN_TRACEIO_FILTER,"drvLove::sendCommand \"%s\"\n",data);
+    else
+    {
+        if( sts == asynTimeout )
+            asynPrint(pasynUser,ASYN_TRACE_ERROR,"drvLove::sendCommand asynTimeout\n");
+        else if( sts == asynOverflow )
+            asynPrint(pasynUser,ASYN_TRACE_ERROR,"drvLove::sendCommand asynOverflow\n");
+        else if( sts == asynError )
+            asynPrint(pasynUser,ASYN_TRACE_ERROR,"drvLove::sendCommand asynError\n");
+        else
+            asynPrint(pasynUser,ASYN_TRACE_ERROR,"drvLove::sendCommand failed - unknown Asyn error\n");
+    }
+
+    return( sts );
+}
+
+
+static asynStatus recvReply(void* ppvt,asynUser* pasynUser,char* data,size_t maxchars)
+{
+    int eom;
+    asynStatus sts;
+    size_t bytesXfer;
+    Port* plov = (Port*)ppvt;
+    Serport* pser = plov->pserport;
+
+    asynPrint(pasynUser,ASYN_TRACE_FLOW,"drvLove::recvReplay\n");
+
+    sts = pser->pasynOctet->read(pser->pasynOctetPvt,pser->pasynUser,data,maxchars,&bytesXfer,&eom);
+    if( ISOK(sts) )
+    {
+        sts = evalMessage(&bytesXfer,plov->inpMsg,pasynUser,data);
+        asynPrint(pasynUser,ASYN_TRACEIO_FILTER,"drvLove::recvReply %d \"%s\"\n",bytesXfer,data);
+    }
+    else
+    {
+        if( sts == asynTimeout )
+            asynPrint(pasynUser,ASYN_TRACE_ERROR,"drvLove::recvReply asynTimeout\n");
+        else if( sts == asynOverflow )
+            asynPrint(pasynUser,ASYN_TRACE_ERROR,"drvLove::recvReply asynOverflow\n");
+        else if( sts == asynError )
+            asynPrint(pasynUser,ASYN_TRACE_ERROR,"drvLove::recvReply asynError\n");
+        else
+            asynPrint(pasynUser,ASYN_TRACE_ERROR,"drvLove::recvReply failed - unknown Asyn error\n");
+    }
+
+    return( sts );
+}
+
+
+/****************************************************************************
+ * Define private command / response methods
+ ****************************************************************************/
+static asynStatus getValue(Inst* pinst,epicsInt32* value)
+{
+    int sign,data;
+    Port* pport = pinst->pport;
+    Readback* prb = (Readback*)pport->inpMsg;
+
+    asynPrint(pport->pasynUser,ASYN_TRACE_FLOW,"drvLove::getValue\n" );
+
+    sscanf(prb->Value.stat,"%4x",&sign);
+    sscanf(prb->Value.data,"%4d",&data);
+    *value = (epicsInt32)data;
+    if( sign & 0x0001 )
+        *value *= -1;
+
+    return( asynSuccess );
+}
+
+
+static asynStatus getStatus(Inst* pinst,epicsInt32* value)
+{
+    int sts;
+    Port* pport = pinst->pport;
+    Readback* prb = (Readback*)pport->inpMsg;
+
+    asynPrint(pport->pasynUser,ASYN_TRACE_FLOW,"drvLove::getStatus\n" );
+
+    sscanf(prb->Value.stat,"%4x",&sts);
+    *value = (epicsInt32)sts;
+
+    return( asynSuccess );
+}
+
+
+static asynStatus getSignedValue(Inst* pinst,epicsInt32* value)
+{
+    int sts,data;
+    Port* pport = pinst->pport;
+    Readback* prb = (Readback*)pport->inpMsg;
+
+    asynPrint(pport->pasynUser,ASYN_TRACE_FLOW,"drvLove::getSignedValue\n" );
+
+    sscanf(prb->Signed.data,"%4d",&data);
+    *value = (epicsInt32)data;
+
+    if( pinst->pinfo->modidx == model1600 )
+    {
+        sscanf(prb->Signed.info,"%2d",&sts);
+        if( sts )
+            *value *= -1;
+    }
+    else
+    {
+        sscanf(prb->Signed.info,"%2x",&sts);
+        if( sts & 0x0001 )
+            *value *= -1;
+    }
+
+    return( asynSuccess );
+}
+
+
+static asynStatus getData(Inst* pinst,epicsInt32* value)
+{
+    int data;
+    Port* pport = pinst->pport;
+    Readback* prb = (Readback*)pport->inpMsg;
+
+    asynPrint(pport->pasynUser,ASYN_TRACE_FLOW,"drvLove::getData\n" );
+
+    sscanf(prb->State.data,"%2x",&data);
+    *value = (epicsInt32)data;
+
+    return( asynSuccess );
+}
+
+
+static asynStatus putData(Inst* pinst,epicsInt32* value)
+{
+    int sign,data;
+    Port* pport = pinst->pport;
+
+    asynPrint(pport->pasynUser,ASYN_TRACE_FLOW,"drvLove::putData\n" );
+
+    if( *value < 0 )
+    {
+        sign = 0xFF;
+        *value *= -1;
+    }
+    else
+        sign = 0;
+
+    data = (int)(*value);
+    sprintf(pport->outMsg,"%s%4.4d%2.2X",pinst->pcmd->write,data,sign);
+
+    return( asynSuccess );
+}
+
+
+static asynStatus doNull(Inst* pinst,epicsInt32* value)
+{
+    return( asynError );
 }
 
 
@@ -572,14 +964,13 @@ static void unlockPort(Lovport* plov,asynUser* pasynUser)
 static void reportIt(void* ppvt,FILE* fp,int details)
 {
     int i;
-    Lovport* plov = (Lovport*)ppvt;
+    Port* plov = (Port*)ppvt;
     Serport* pser = plov->pserport;
-
 
     fprintf(fp, "    %s is connected to %s\n",plov->name,pser->name);
 
     for( i = 0; i < K_INSTRMAX; ++i )
-        if( plov->instr[i].isConnected )
+        if( plov->instr[i].isConn )
             fprintf(fp, "        Addr %d is connected\n",(i + 1));
 }
 
@@ -587,21 +978,20 @@ static void reportIt(void* ppvt,FILE* fp,int details)
 static asynStatus connectIt(void* ppvt,asynUser* pasynUser)
 {
     asynStatus sts;
-    int addr,isConnected;
-    Lovport* plov = (Lovport*)ppvt;
+    int addr,isConn;
+    Port* plov = (Port*)ppvt;
     Serport* pser = plov->pserport;
-
 
     asynPrint(pasynUser,ASYN_TRACE_FLOW,"drvLove::connectIt\n");
 
-    sts = pasynManager->isConnected(pser->pasynUser,&isConnected);
+    sts = pasynManager->isConnected(pser->pasynUser,&isConn);
     if( ISNOTOK(sts) )
     {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,"port %s isConnected error %s\n",pser->name,pser->pasynUser->errorMessage);
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,"port %s isConn error %s\n",pser->name,pser->pasynUser->errorMessage);
         return( asynError );
     }
 
-    if( isConnected == 0 )
+    if( isConn == 0 )
     {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize, "port %s not connected to %s\n",plov->name,pser->name);
         return( asynError );
@@ -619,18 +1009,26 @@ static asynStatus connectIt(void* ppvt,asynUser* pasynUser)
 
     if( addr > 0 )
     {
-        Instrinfo* prInstr = &plov->instr[addr - 1];
+        Instr* prInstr = &plov->instr[addr - 1];
 
-        if( prInstr->isConnected )
+        if( prInstr->isConn )
         {
             asynPrint(pasynUser,ASYN_TRACE_ERROR,"drvLove::connectIt %s device %d already connected\n",plov->name,addr);
             return( asynError );
         }
 
-        prInstr->isConnected = 1;
+        prInstr->isConn = 1;
     }
     else
-        plov->isConnected = 1;
+    {
+        if( plov->isConn )
+        {
+            asynPrint(pasynUser,ASYN_TRACE_ERROR,"drvLove::connectIt %s device %d already connected\n",plov->name,addr);
+            return( asynError );
+        }
+
+        plov->isConn = 1;
+    }
 
     pasynManager->exceptionConnect(pasynUser);
 
@@ -642,9 +1040,8 @@ static asynStatus disconnectIt(void* ppvt,asynUser* pasynUser)
 {
     asynStatus sts;
     int addr;
-    Instrinfo* prInstr;
-    Lovport* plov = (Lovport*)ppvt;
-
+    Instr* prInstr;
+    Port* plov = (Port*)ppvt;
 
     asynPrint(pasynUser,ASYN_TRACE_FLOW,"drvLove::disconnectIt\n");
 
@@ -661,20 +1058,20 @@ static asynStatus disconnectIt(void* ppvt,asynUser* pasynUser)
 
     if( addr < 0 )
     {
-        if( plov->isConnected == 0 )
+        if( plov->isConn == 0 )
         {
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,"not connected");
             return( asynError );
         }
 
         pasynManager->exceptionDisconnect(pasynUser);
-        plov->isConnected = 0;
+        plov->isConn = 0;
         return( asynSuccess );
     }
 
     prInstr = &plov->instr[addr - 1];
-    if( prInstr->isConnected )
-        prInstr->isConnected = 0;
+    if( prInstr->isConn )
+        prInstr->isConn = 0;
     else
     {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,"not connected");
@@ -688,329 +1085,235 @@ static asynStatus disconnectIt(void* ppvt,asynUser* pasynUser)
 
 
 /****************************************************************************
- * Define private interface asynOctet methods
+ * Define private interface asynDrvUser methods
  ****************************************************************************/
-static asynStatus writeIt(void* ppvt,asynUser* pasynUser,const char* data,size_t numchars,size_t* pnbytesTransfered)
+static asynStatus create(void* ppvt,asynUser* pasynUser,const char* drvInfo, const char** pptypeName,size_t* psize)
 {
-    unsigned char cs;
+    int i,addr;
     asynStatus sts;
-    int addr;
-    size_t len,bytesXfer;
-    size_t* pbytesXfer;
-    Lovport* plov = (Lovport*)ppvt;
+    Inst* pinst;
+    Port* pport = (Port*)ppvt;
 
-
-    asynPrint(pasynUser,ASYN_TRACE_FLOW,"drvLove::writeIt\n");
-
-    if( pnbytesTransfered == NULL )
-        pbytesXfer = &bytesXfer;
-    else
-        pbytesXfer = pnbytesTransfered;
+    asynPrint(pasynUser,ASYN_TRACE_FLOW,"drvLove::create\n");
 
     sts = pasynManager->getAddr(pasynUser,&addr);
     if( ISNOTOK(sts) )
         return( sts );
 
-    sprintf(plov->tmpMsg,"%02X%*s",addr,(int)numchars,data);
-    calcChecksum(strlen(plov->tmpMsg),plov->tmpMsg,&cs);
-    sprintf(plov->outMsg,"\002L%s%2X",plov->tmpMsg,cs);
-    len = strlen(plov->outMsg);
-
-    sts = lockPort(plov,pasynUser);
-    if( ISNOTOK(sts) )
-        return( sts );
-
-    sts = writeRaw(ppvt,pasynUser,plov->outMsg,len,pbytesXfer);
-    if( ISOK(sts) )
+    for( i = 0; i < cmdCount; ++i )
     {
-        if( len == *pbytesXfer )
-            *pbytesXfer = numchars;
-        asynPrint(pasynUser,ASYN_TRACEIO_FILTER,"drvLove::writeIt \"%*s\"\n",numchars,data);
-    }
-    unlockPort(plov,pasynUser);
-
-    return( sts );
-}
-
-
-static asynStatus writeRaw(void* ppvt,asynUser* pasynUser,const char* data,size_t numchars,size_t* pnbytesTransfered)
-{
-    asynStatus sts;
-    size_t bytesXfer;
-    size_t* pbytesXfer;
-    Lovport* plov = (Lovport*)ppvt;
-    Serport* pser = plov->pserport;
-
-
-    asynPrint(pasynUser,ASYN_TRACE_FLOW,"drvLove::writeRaw\n");
-
-    if( pnbytesTransfered == NULL )
-        pbytesXfer = &bytesXfer;
-    else
-        pbytesXfer = pnbytesTransfered;
-
-    sts = lockPort(plov,pasynUser);
-    if( ISNOTOK(sts) )
-        return( sts );
-
-    sts = pser->pasynOctet->write(pser->octetPvt,pasynUser,data,numchars,pbytesXfer);
-    if( ISOK(sts) )
-        asynPrint(pasynUser,ASYN_TRACEIO_FILTER,"drvLove::writeRaw \"%*s\"\n",numchars,data);
-    else
-    {
-        if( sts == asynTimeout )
-            asynPrint(pasynUser,ASYN_TRACE_ERROR,"drvLove::writeRaw asynTimeout\n");
-        else if( sts == asynOverflow )
-            asynPrint(pasynUser,ASYN_TRACE_ERROR,"drvLove::writeRaw asynOverflow\n");
-        else if( sts == asynError )
-            asynPrint(pasynUser,ASYN_TRACE_ERROR,"drvLove::writeRaw asynError\n");
-        else
-            asynPrint(pasynUser,ASYN_TRACE_ERROR,"drvLove::writeRaw failed - unknown Asyn error\n");
-    }
-    unlockPort(plov,pasynUser);
-
-    return( sts );
-}
-
-
-static asynStatus readIt(void* ppvt,asynUser* pasynUser,char* data,size_t maxchars,size_t* pnbytesTransfered,int* peomReason)
-{
-    asynStatus sts;
-    int eom;
-    int* peom;
-    size_t bytesXfer;
-    size_t* pbytesXfer;
-    Lovport* plov = (Lovport*)ppvt;
-
-
-    asynPrint(pasynUser,ASYN_TRACE_FLOW,"drvLove::readIt\n");
-
-    if( pnbytesTransfered == NULL )
-        pbytesXfer = &bytesXfer;
-    else
-        pbytesXfer = pnbytesTransfered;
-
-    if( peomReason == NULL )
-        peom = &eom;
-    else
-        peom = peomReason;
-
-    sts = lockPort(plov,pasynUser);
-    if( ISNOTOK(sts) )
-        return( sts );
-
-    sts = readRaw(ppvt,pasynUser,plov->inpMsg,maxchars,pbytesXfer,peom);
-    if( ISOK(sts) )
-    {
-        sts = evalMessage(pbytesXfer,plov->inpMsg,pasynUser,data);
-        asynPrint(pasynUser,ASYN_TRACEIO_FILTER,"drvLove::readIt %d \"%s\"\n",*pbytesXfer,data);
-    }
-    unlockPort(plov,pasynUser);
-
-    return( sts );
-}
-
-
-static asynStatus readRaw(void* ppvt,asynUser* pasynUser,char* data,size_t maxchars,size_t* pnbytesTransfered,int* peomReason)
-{
-    asynStatus sts;
-    int eom;
-    int* peom;
-    size_t bytesXfer;
-    size_t* pbytesXfer;
-    Lovport* plov = (Lovport*)ppvt;
-    Serport* pser = plov->pserport;
-
-
-    asynPrint(pasynUser,ASYN_TRACE_FLOW,"drvLove::readRaw\n");
-
-    if( pnbytesTransfered == NULL )
-        pbytesXfer = &bytesXfer;
-    else
-        pbytesXfer = pnbytesTransfered;
-
-    if( peomReason == NULL )
-        peom = &eom;
-    else
-        peom = peomReason;
-
-    sts = lockPort(plov,pasynUser);
-    if( ISNOTOK(sts) )
-        return( sts );
-
-    sts = pser->pasynOctet->read(pser->octetPvt,pasynUser,data,maxchars,pbytesXfer,peom);
-    if( ISOK(sts) )
-    {
-        data[*pbytesXfer] = '\0';
-
-        if( (*peom & ASYN_EOM_EOS) == 0 )
+        if( epicsStrCaseCmp(CmdTable[i].pname,drvInfo) == 0 )
         {
-            sts = asynError;
-            asynPrint(pasynUser,ASYN_TRACE_ERROR,"drvLove::readRaw invalid EOM reason %d\n",*peom);
+            pinst = callocMustSucceed(sizeof(Inst),sizeof(char),"drvLove::create");
+            pinst->pport = pport;
+            pinst->pinfo = &pport->instr[addr-1];
+            pinst->read = CmdTable[i].read;
+            pinst->write = CmdTable[i].write;
+            pinst->pcmd = &CmdTable[i].strings[pinst->pinfo->modidx];
+
+            pasynUser->drvUser = (void*)pinst;
+
+            return( asynSuccess );
         }
-
-        asynPrint(pasynUser,ASYN_TRACEIO_FILTER,"drvLove::readRaw %d \"%s\"\n",*pbytesXfer,data);
     }
-    else
-    {
-        if( sts == asynTimeout )
-            asynPrint(pasynUser,ASYN_TRACE_ERROR,"drvLove::readRaw asynTimeout\n");
-        else if( sts == asynOverflow )
-            asynPrint(pasynUser,ASYN_TRACE_ERROR,"drvLove::readRaw asynOverflow\n");
-        else if( sts == asynError )
-            asynPrint(pasynUser,ASYN_TRACE_ERROR,"drvLove::readRaw asynError\n");
-        else
-            asynPrint(pasynUser,ASYN_TRACE_ERROR,"drvLove::readRaw failed - unknown Asyn error\n");
-    }
-    unlockPort(plov,pasynUser);
 
-    return( sts );
+    epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,"failure to find command %s",drvInfo);
+    return( asynError );
 }
 
 
-static asynStatus flushIt(void* ppvt,asynUser* pasynUser)
+static asynStatus getType(void* ppvt,asynUser* pasynUser,const char** pptypeName,size_t* psize)
 {
-    asynStatus sts;
-    Lovport* plov = (Lovport*)ppvt;
-    Serport* pser = plov->pserport;
+    asynPrint(pasynUser,ASYN_TRACE_FLOW,"drvLove::getType\n");
 
+    if( pptypeName )
+        *pptypeName = NULL;
+    if( psize )
+        *psize = 0;
 
-    asynPrint(pasynUser,ASYN_TRACE_FLOW,"drvLove::flushIt\n" );
-
-    sts = lockPort(plov,pasynUser);
-    if( ISNOTOK(sts) )
-        return( sts );
-
-    sts = pser->pasynOctet->flush(pser->octetPvt,pasynUser);
-    if( ISOK(sts) )
-        asynPrint(pasynUser,ASYN_TRACE_FLOW,"drvLove::flushIt done\n");
-    else
-        asynPrint(pasynUser,ASYN_TRACE_ERROR,"drvLove::flushIt failed\n");
-    unlockPort(plov,pasynUser);
-
-    return( sts );
+    return( asynSuccess );
 }
 
 
-static asynStatus setInpEos(void* ppvt,asynUser* pasynUser,const char* eos,int eoslen)
+static asynStatus destroy(void* ppvt,asynUser* pasynUser)
 {
-    asynStatus sts;
-    Lovport* plov = (Lovport*)ppvt;
-    Serport* pser = plov->pserport;
-    static char inpEosSet = 0;
+    Port* pport = (Port*)ppvt;
 
+    asynPrint(pasynUser,ASYN_TRACE_FLOW,"drvLove::destroy\n");
 
-    asynPrint(pasynUser,ASYN_TRACE_FLOW,"drvLove::setInpEos\n");
-
-    if( inpEosSet == 1 )
+    if( pport )
     {
-        sts = showFailure(pasynUser,"setInpEos");
-        return( sts );
-    }
+        free(pasynUser->drvUser);
+        pasynUser->drvUser = NULL;
 
-    sts = lockPort(plov,pasynUser);
-    if( ISNOTOK(sts) )
-        return( sts );
-
-    sts = pser->pasynOctet->setInputEos(pser->octetPvt,pasynUser,eos,eoslen);
-    if( ISOK(sts) )
-    {
-        inpEosSet = 1;
-        asynPrint(pasynUser,ASYN_TRACE_FLOW,"drvLove::Input EOS set to \\0%d\n",*eos);
+        return( asynSuccess );
     }
     else
     {
-        inpEosSet = 0;
-        asynPrint(pasynUser,ASYN_TRACE_ERROR,"drvLove::Input EOS set failed to \\0%d\n",*eos);
-    }
-    unlockPort(plov,pasynUser);
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s destroy called before create\n",pport->name);
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,"%s destroy called before create\n",pport->name);
 
-    return( sts );
+        return( asynError );
+    }
+
 }
 
 
-static asynStatus getInpEos(void* ppvt,asynUser* pasynUser,char* eos,int eossize,int* eoslen)
+/****************************************************************************
+ * Define private interface asynInt32 methods
+ ****************************************************************************/
+static asynStatus writeInt32(void* ppvt,asynUser* pasynUser,epicsInt32 value)
 {
     asynStatus sts;
-    Lovport* plov = (Lovport*)ppvt;
-    Serport* pser = plov->pserport;
+    Port* pport = (Port*)ppvt;
+    Inst* pinst = (Inst*)pasynUser->drvUser;
 
+    asynPrint(pasynUser,ASYN_TRACE_FLOW,"drvLove::writeInt32\n");
 
-    asynPrint(pasynUser,ASYN_TRACE_FLOW,"drvLove::getInpEos\n");
-
-    sts = lockPort(plov,pasynUser);
+    sts = pinst->write(pinst,&value);
     if( ISNOTOK(sts) )
+    {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,"%s error %s",pport->name,pport->pasynUser->errorMessage);
         return( sts );
+    }
 
-    sts = pser->pasynOctet->getInputEos(pser->octetPvt,pasynUser,eos,eossize,eoslen);
-    if( ISOK(sts) )
-        asynPrint(pasynUser,ASYN_TRACE_FLOW,"drvLove::getInpEos done\n");
-    else
-        asynPrint(pasynUser,ASYN_TRACE_ERROR,"drvLove::getInpEos failed\n");
-    unlockPort(plov,pasynUser);
+    lockPort(pport,pasynUser);
+    sts = executeCommand(pport,pasynUser);
+    unlockPort(pport,pasynUser);
 
-    return( sts );
+    if( ISNOTOK(sts) )
+    {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,"%s error %s",pport->name,pport->pasynUser->errorMessage);
+        return( sts );
+    }
+
+    sts = processWriteResponse(pport);
+    if( ISNOTOK(sts) )
+    {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,"%s error %s",pport->name,pport->pasynUser->errorMessage);
+        return( sts );
+    }
+
+    return( asynSuccess );
 }
 
 
-static asynStatus setOutEos(void* ppvt,asynUser* pasynUser,const char* eos,int eoslen)
+static asynStatus readInt32(void* ppvt,asynUser* pasynUser,epicsInt32* value)
 {
     asynStatus sts;
-    Lovport* plov = (Lovport*)ppvt;
-    Serport* pser = plov->pserport;
-    static char outEosSet = 0;
+    Port* pport = (Port*)ppvt;
+    Inst* pinst = (Inst*)pasynUser->drvUser;
 
+    asynPrint(pasynUser,ASYN_TRACE_FLOW,"drvLove::readInt32\n");
 
-    asynPrint(pasynUser,ASYN_TRACE_FLOW,"drvLove::setOutEos\n");
-
-    if( outEosSet == 1 )
-    {
-        sts = showFailure(pasynUser,"setOutEos");
-        return( sts );
-    }
-
-    sts = lockPort(plov,pasynUser);
-    if( ISNOTOK(sts) )
-        return( sts );
-
-    sts = pser->pasynOctet->setOutputEos(pser->octetPvt,pasynUser,eos,eoslen);
-    if( ISOK(sts) )
-    {
-        outEosSet = 1;
-        asynPrint(pasynUser,ASYN_TRACE_FLOW,"drvLove::setOutEos Output EOS set to \\0%d\n",*eos);
-    }
+    if( pinst->pcmd->read )
+        sprintf(pport->outMsg,"%s",pinst->pcmd->read);
     else
     {
-        outEosSet = 0;
-        asynPrint(pasynUser,ASYN_TRACE_ERROR,"drvLove::setOutEos Output EOS set failed to \\0%d\n",*eos);
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,"%s error %s",pport->name,pport->pasynUser->errorMessage);
+        return( asynError );
     }
-    unlockPort(plov,pasynUser);
 
-    return( sts );
+    lockPort(pport,pasynUser);
+    sts = executeCommand(pport,pasynUser);
+    unlockPort(pport,pasynUser);
+
+    if( ISNOTOK(sts) )
+    {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,"%s error %s",pport->name,pport->pasynUser->errorMessage);
+        return( sts );
+    }
+
+    sts = pinst->read(pinst,value);
+    if( ISNOTOK(sts) )
+    {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,"%s error %s",pport->name,pport->pasynUser->errorMessage);
+        return( sts );
+    }
+
+    if( ISOK(sts) )
+        asynPrint(pasynUser,ASYN_TRACEIO_FILTER,"drvLove::readInt32 readback from %s is %d\n",pport->name,*value);
+
+    return( asynSuccess );
 }
 
 
-static asynStatus getOutEos(void* ppvt,asynUser* pasynUser,char* eos,int eossize,int* eoslen)
+/****************************************************************************
+ * Define private interface asynUInt32Digital methods
+ ****************************************************************************/
+static asynStatus writeUInt32(void* ppvt,asynUser* pasynUser,epicsUInt32 value,epicsUInt32 mask)
 {
     asynStatus sts;
-    Lovport* plov = (Lovport*)ppvt;
-    Serport* pser = plov->pserport;
+    Port* pport = (Port*)ppvt;
+    Inst* pinst = (Inst*)pasynUser->drvUser;
 
+    asynPrint(pasynUser,ASYN_TRACE_FLOW,"drvLove::writeUInt32\n");
 
-    asynPrint(pasynUser,ASYN_TRACE_FLOW,"drvLove::getOutEos\n");
-
-    sts = lockPort(plov,pasynUser);
+    sts = pinst->write(pinst,(epicsInt32*)&value);
     if( ISNOTOK(sts) )
+    {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,"%s error %s",pport->name,pport->pasynUser->errorMessage);
         return( sts );
+    }
 
-    sts = pser->pasynOctet->getOutputEos(pser->octetPvt,pasynUser,eos,eossize,eoslen);
-    if( ISOK(sts) )
-        asynPrint(pasynUser,ASYN_TRACE_FLOW,"drvLove::getOutEos done\n");
+    lockPort(pport,pasynUser);
+    sts = executeCommand(pport,pasynUser);
+    unlockPort(pport,pasynUser);
+
+    if( ISNOTOK(sts) )
+    {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,"%s error %s",pport->name,pport->pasynUser->errorMessage);
+        return( sts );
+    }
+
+    sts = processWriteResponse(pport);
+    if( ISNOTOK(sts) )
+    {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,"%s error %s",pport->name,pport->pasynUser->errorMessage);
+        return( sts );
+    }
+
+    return( asynSuccess );
+}
+
+
+static asynStatus readUInt32(void* ppvt,asynUser* pasynUser,epicsUInt32* value,epicsUInt32 mask)
+{
+    asynStatus sts;
+    Port* pport = (Port*)ppvt;
+    Inst* pinst = (Inst*)pasynUser->drvUser;
+
+    asynPrint(pasynUser,ASYN_TRACE_FLOW,"drvLove::readUInt32\n");
+
+    if( pinst->pcmd->read )
+        sprintf(pport->outMsg,"%s",pinst->pcmd->read);
     else
-        asynPrint(pasynUser,ASYN_TRACE_ERROR,"drvLove::getOutEos failed\n");
-    unlockPort(plov,pasynUser);
+    {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,"%s error %s",pport->name,pport->pasynUser->errorMessage);
+        return( asynError );
+    }
 
-    return( sts );
+    lockPort(pport,pasynUser);
+    sts = executeCommand(pport,pasynUser);
+    unlockPort(pport,pasynUser);
+
+    if( ISNOTOK(sts) )
+    {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,"%s error %s",pport->name,pport->pasynUser->errorMessage);
+        return( sts );
+    }
+
+    sts = pinst->read(pinst,(epicsInt32*)value);
+    if( ISNOTOK(sts) )
+    {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,"%s error %s",pport->name,pport->pasynUser->errorMessage);
+        return( sts );
+    }
+
+    if( ISOK(sts) )
+        asynPrint(pasynUser,ASYN_TRACEIO_FILTER,"drvLove::readUInt32 readback from %s is 0x%X,mask=0x%X\n",pport->name,*value,mask);
+
+    return( asynSuccess );
 }
 
 
@@ -1029,6 +1332,16 @@ static void drvLoveInitCallFunc(const iocshArgBuf* args)
     drvLoveInit(args[0].sval,args[1].sval,args[2].ival);
 }
 
+static const iocshArg drvLoveConfigArg0 = {"lovPort",iocshArgString};
+static const iocshArg drvLoveConfigArg1 = {"addr",iocshArgInt};
+static const iocshArg drvLoveConfigArg2 = {"model",iocshArgString};
+static const iocshArg* drvLoveConfigArgs[]= {&drvLoveConfigArg0,&drvLoveConfigArg1,&drvLoveConfigArg2};
+static const iocshFuncDef drvLoveConfigFuncDef = {"drvLoveConfig",3,drvLoveConfigArgs};
+static void drvLoveConfigCallFunc(const iocshArgBuf* args)
+{
+    drvLoveConfig(args[0].sval,args[1].ival,args[2].sval);
+}
+
 /* Registration method */
 static void drvLoveRegister(void)
 {
@@ -1038,6 +1351,7 @@ static void drvLoveRegister(void)
     {
         firstTime = 0;
         iocshRegister( &drvLoveInitFuncDef, drvLoveInitCallFunc );
+        iocshRegister( &drvLoveConfigFuncDef, drvLoveConfigCallFunc );
     }
 }
 epicsExportRegistrar( drvLoveRegister );

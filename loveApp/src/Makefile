@@ -18,8 +18,6 @@ LIBRARY_IOC += love
 #-----------------------------------------------------------------------------
 # The following are compiled and added to the Support library
 love_SRCS += drvLove.c
-love_SRCS += ifaceLove.c
-love_SRCS += devLove.c
 
 love_LIBS += asyn
 love_LIBS += $(EPICS_BASE_IOC_LIBS)

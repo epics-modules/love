@@ -10,9 +10,8 @@ include $(TOP)/configure/CONFIG
 #----------------------------------------------------
 # Create and install (or just install)
 # databases, templates, substitutions like this
-DB += asynRecord.db
-DB += devLove.db
-DB += devLove1IDA.db
+DB += LoveController.db
+DB += LoveControllerControl.db
 
 #----------------------------------------------------
 # If <anyname>.db template is not named <anyname>*.template add
