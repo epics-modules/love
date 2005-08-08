@@ -1,0 +1,4 @@
+#!/bin/csh
+setenv EPICS_DISPLAY_PATH loveApp/op/adl
+cd loveApp/op/adl
+medm -x -macro "P=lov:,Q=Beam1" LoveController.adl &
