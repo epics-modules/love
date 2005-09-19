@@ -25,29 +25,33 @@ asynSetOption("S0",0,"crtscts","N")
 
 # Driver support
 drvLoveInit("L0","S0",0)
-
-# Interface support
-ifaceLoveInit("L0")
-ifaceLoveConfig("L0",1,"1600",3)
-ifaceLoveConfig("L0",2,"1600",3)
-ifaceLoveConfig("L0",3,"1600",3)
-ifaceLoveConfig("L0",4,"16A",3)
+drvLoveConfig("L0",1,"1600")
+drvLoveConfig("L0",2,"1600")
+drvLoveConfig("L0",3,"1600")
+drvLoveConfig("L0",4,"16A")
 
 #-----------------------------------------------------------------------------
 # Load records
 
-# Individual controllers
-dbLoadRecords("db/asynRecord.db","P=lov,R=PortS0,PORT=S0,ADDR=0,OMAX=0,IMAX=0")
-dbLoadRecords("db/asynRecord.db","P=lov,R=Instr1,PORT=L0,ADDR=0x01,OMAX=0,IMAX=0")
-dbLoadRecords("db/asynRecord.db","P=lov,R=Instr2,PORT=L0,ADDR=0x02,OMAX=0,IMAX=0")
-dbLoadRecords("db/asynRecord.db","P=lov,R=Instr3,PORT=L0,ADDR=0x03,OMAX=0,IMAX=0")
-dbLoadRecords("db/asynRecord.db","P=lov,R=Instr4,PORT=L0,ADDR=0x04,OMAX=0,IMAX=0")
+# Asyn records for individual controllers
+dbLoadRecords("$(ASYN)/db/asynRecord.db","P=dmk0,R=PortS0,PORT=S0,ADDR=0,OMAX=0,IMAX=0")
+dbLoadRecords("$(ASYN)/db/asynRecord.db","P=dmk0,R=Instr1,PORT=L0,ADDR=0x01,OMAX=0,IMAX=0")
+dbLoadRecords("$(ASYN)/db/asynRecord.db","P=dmk0,R=Instr2,PORT=L0,ADDR=0x02,OMAX=0,IMAX=0")
+dbLoadRecords("$(ASYN)/db/asynRecord.db","P=dmk0,R=Instr3,PORT=L0,ADDR=0x03,OMAX=0,IMAX=0")
+dbLoadRecords("$(ASYN)/db/asynRecord.db","P=dmk0,R=Instr4,PORT=L0,ADDR=0x04,OMAX=0,IMAX=0")
 
-# PVs
-dbLoadRecords("db/devLove.db","P=lov,Q=Volt1,PORT=L0,ADDR=0x01")
-#dbLoadRecords("db/devLove.db","P=lov,Q=Volt2,PORT=L0,ADDR=0x02")
-#dbLoadRecords("db/devLove.db","P=lov,Q=Volt3,PORT=L0,ADDR=0x03")
-#dbLoadRecords("db/devLove.db","P=lov,Q=Volt4,PORT=L0,ADDR=0x04")
+# For beamline database
+dbLoadRecords("db/LoveController.db","P=dmk0:,Q=Love1:,PORT=L0,ADDR=0x01")
+dbLoadRecords("db/LoveControllerControl.db","P=dmk0:,Q=Love1:,PORT=L0,ADDR=0x01")
+
+#dbLoadRecords("db/LoveController.db","P=dmk0:,Q=Love2:,PORT=L0,ADDR=0x02")
+#dbLoadRecords("db/LoveControllerControl.db","P=dmk0:,Q=Love2:,PORT=L0,ADDR=0x01")
+
+#dbLoadRecords("db/LoveController.db","P=dmk0:,Q=Love3:,PORT=L0,ADDR=0x03")
+#dbLoadRecords("db/LoveControllerControl.db","P=dmk0:,Q=Love3:,PORT=L0,ADDR=0x01")
+
+dbLoadRecords("db/LoveController.db","P=dmk0:,Q=Love4:,PORT=L0,ADDR=0x04")
+dbLoadRecords("db/LoveControllerControl.db","P=dmk0:,Q=Love4:,PORT=L0,ADDR=0x01")
 
 #-----------------------------------------------------------------------------
 # Start IOC
