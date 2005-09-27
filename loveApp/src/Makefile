@@ -12,8 +12,7 @@ LIBRARY_IOC += love
 
 #-----------------------------------------------------------------------------
 # Install database definition files into <top>/dbd
-#DBD += devLove.dbd
-#DBD += devAsynLove.dbd
+DBD += devLove.dbd
 
 #-----------------------------------------------------------------------------
 # The following are compiled and added to the Support library
