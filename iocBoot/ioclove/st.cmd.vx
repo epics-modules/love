@@ -20,6 +20,12 @@ ld < loveApp.munch
 cd startup
 
 #-----------------------------------------------------------------------------
+# Load database
+cd top
+dbLoadDatabase( "dbd/loveAppVX.dbd" )
+loveAppVX_registerRecordDeviceDriver(pdbbase)
+
+#-----------------------------------------------------------------------------
 # Configure components
 
 #-----------------------------------------------------------------------------
@@ -66,12 +72,6 @@ drvLoveConfig("L0",1,"1600")
 drvLoveConfig("L0",2,"1600")
 drvLoveConfig("L0",3,"1600")
 drvLoveConfig("L0",4,"16A")
-
-#-----------------------------------------------------------------------------
-# Load database
-cd top
-dbLoadDatabase( "dbd/loveAppVX.dbd" )
-loveAppVX_registerRecordDeviceDriver(pdbbase)
 
 #-----------------------------------------------------------------------------
 # Load records
