@@ -48,15 +48,15 @@
     (drvAsynSerialPort) must be initialized.
 
     The method dbior can be called from the IOC shell to display the current
-    status of the driver and well as individual controllers.
+    status of the driver as well as individual controllers.
 
 
  Developer notes:
 
  Source control info:
     Modified by:    $Author: dkline $
-                    $Date: 2005-08-04 15:13:02 $
-                    $Revision: 1.2 $
+                    $Date: 2005-11-16 21:26:07 $
+                    $Revision: 1.3 $
 
  =============================================================================
  History:
