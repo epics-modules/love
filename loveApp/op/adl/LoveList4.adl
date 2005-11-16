@@ -95,7 +95,7 @@ display {
 		height=26
 	}
 	control {
-		chan="$(P)$(Q1).DESC"
+		chan="$(P)$(Q1):Value.DESC"
 		clr=54
 		bclr=14
 	}
@@ -345,7 +345,7 @@ menu {
 		height=26
 	}
 	control {
-		chan="$(P)$(Q2).DESC"
+		chan="$(P)$(Q2):Value.DESC"
 		clr=54
 		bclr=14
 	}
@@ -530,7 +530,7 @@ rectangle {
 		height=26
 	}
 	control {
-		chan="$(P)$(Q3).DESC"
+		chan="$(P)$(Q3):Value.DESC"
 		clr=54
 		bclr=14
 	}
@@ -715,7 +715,7 @@ rectangle {
 		height=26
 	}
 	control {
-		chan="$(P)$(Q4).DESC"
+		chan="$(P)$(Q4):Value.DESC"
 		clr=54
 		bclr=14
 	}
