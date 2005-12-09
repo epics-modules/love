@@ -3,9 +3,9 @@
 <HEAD>
 	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=utf-8">
 	<TITLE>drvLove</TITLE>
-	<META NAME="GENERATOR" CONTENT="OpenOffice.org 1.1.2  (Linux)">
+	<META NAME="GENERATOR" CONTENT="OpenOffice.org 1.1.3  (Linux)">
 	<META NAME="CREATED" CONTENT="20050810;15185600">
-	<META NAME="CHANGED" CONTENT="20050812;12524800">
+	<META NAME="CHANGED" CONTENT="20051209;8152600">
 	<STYLE>
 	<!--
 		@page { size: 8.5in 11in }
@@ -15,9 +15,9 @@
 <BODY LANG="en-US" DIR="LTR">
 <H1 ALIGN=CENTER>love: Love Controller Driver Support 
 </H1>
-<P ALIGN=CENTER><FONT SIZE=4><B>Release 3-2-0</B></FONT></P>
+<P ALIGN=CENTER><FONT SIZE=4><B>Release 3-2-2</B></FONT></P>
 <P ALIGN=CENTER><FONT SIZE=4><B>David Kline</B></FONT></P>
-<P ALIGN=CENTER><FONT SIZE=4><B>August 2005</B></FONT></P>
+<P ALIGN=CENTER><FONT SIZE=4><B>December 2005</B></FONT></P>
 <H3 ALIGN=CENTER><BR><BR>
 </H3>
 <HR>
@@ -27,24 +27,23 @@ source license</A> described at the end of this document.</P>
 <HR>
 <H2 ALIGN=CENTER>Overview</H2>
 <P>This module is part of synApps to provide support for the Love
-Controllers. It consists of MEDM screens, an Asyn-based <SPAN LANG="en-US">multi
-device</SPAN> port driver, and a database. The MEDM screens provide a
-way for viewing the controller values as well as controlling some of
-its configuration. The port driver binds generic Asyn device support
-for EPICS records with the Asyn serial port driver
-(drvAsynSerialPort). The database defines EPICS records, that
-read/write controller values and configuration settings.<BR><BR>The
-Love Controller is an instrument that can be used to monitor
-temperature, pressure, serve as a thermocouple, or control pressure,
-flow, humidity, motion, or pH given the proper hardware. The control
-functions, such as selecting the input type (voltage, current, etc.),
-are programmed from the front panel. Communication with the
-controller is a half-duplex, <SPAN LANG="en-US">multi drop</SPAN>,
-RS-485 serial bus. Refer to the documentation for additional
-information about the features and programmability of the instrument.
-There are several controller models available providing different
-options and features, however, this software supports models 16A and
-1600.</P>
+Controllers. It consists of MEDM screens, an Asyn-based multi device
+port driver, and a database. The MEDM screens provide a way for
+viewing the controller values as well as controlling some of its
+configuration. The port driver binds generic Asyn device support for
+EPICS records with the Asyn serial port driver (drvAsynSerialPort).
+The database defines EPICS records, that read/write controller values
+and configuration settings.<BR><BR>The Love Controller is an
+instrument that can be used to monitor temperature, pressure, serve
+as a thermocouple, or control pressure, flow, humidity, motion, or pH
+given the proper hardware. The control functions, such as selecting
+the input type (voltage, current, etc.), are programmed from the
+front panel. Communication with the controller is a half-duplex,
+multi drop, RS-485 serial bus. Refer to the documentation for
+additional information about the features and programmability of the
+instrument. There are several controller models available providing
+different options and features, however, this software supports
+models 16A and 1600.</P>
 <HR>
 <H2 ALIGN=CENTER>Files</H2>
 <P ALIGN=LEFT>The files listed below are the primary ones in the
@@ -326,7 +325,7 @@ identified directory.</P>
 			<P>LoveController.adl</P>
 		</TD>
 		<TD WIDTH=964>
-			<P>Main <SPAN LANG="en-US">read back</SPAN> screen.</P>
+			<P>Main read back screen.</P>
 		</TD>
 	</TR>
 	<TR>
@@ -334,8 +333,7 @@ identified directory.</P>
 			<P>LoveControllerControl.adl</P>
 		</TD>
 		<TD WIDTH=964>
-			<P>Displays additional <SPAN LANG="en-US">read back</SPAN> and
-			configuration information.</P>
+			<P>Displays additional read back and configuration information.</P>
 		</TD>
 	</TR>
 	<TR>
@@ -362,7 +360,7 @@ identified directory.</P>
 			<P>drvLove.c</P>
 		</TD>
 		<TD WIDTH=963>
-			<P>Asyn-based <SPAN LANG="en-US">multi device</SPAN> port driver.</P>
+			<P>Asyn-based multi device port driver.</P>
 		</TD>
 	</TR>
 	<TR>
@@ -390,6 +388,15 @@ identified directory.</P>
 			<P>vxWorks-specific database definition file.</P>
 		</TD>
 	</TR>
+	<TR>
+		<TD WIDTH=224>
+			<P>devLove.dbd</P>
+		</TD>
+		<TD WIDTH=963>
+			<P>Necessary for other components to import Love Controller
+			support.</P>
+		</TD>
+	</TR>
 </TABLE>
 <P><BR><BR>
 </P>
@@ -397,18 +404,18 @@ identified directory.</P>
 <H2 ALIGN=CENTER>MEDM Screens</H2>
 <P>When the script 'start_epics_love' is executed, the main
 controller screen is displayed (see below). It displays the values
-that are of most interest to the user. These values include the <SPAN LANG="en-US">read
-back</SPAN>, set points, alarm limits, and indicates whether the
-controller is in alarm. The 'ENABLE' menu provides a means for
+that are of most interest to the user. These values include the read
+back, set points, alarm limits, and indicates whether the controller
+is in alarm. The 'ENABLE' menu provides a means for
 disabling/enabling record processing. When disabled the records will
 not be processed and no data acquisition will be performed. <BR><BR><BR>
 </P>
 <P><IMG SRC="LoveController.jpeg" NAME="LoveController" ALIGN=LEFT WIDTH=238 HEIGHT=206 BORDER=0><BR CLEAR=LEFT><BR>A
-hidden menu is available in the upper <SPAN LANG="en-US">right hand</SPAN>
-corner of the main screen. It displays additional values, such as
-input type and communication status, as well as allows one to make
-adjusts to some of the configuration parameters (i.e. set point 1 and
-scan rate). The display is illustrated below. <BR><BR><BR>
+hidden menu is available in the upper right hand corner of the main
+screen. It displays additional values, such as input type and
+communication status, as well as allows one to make adjusts to some
+of the configuration parameters (i.e. set point 1 and scan rate). The
+display is illustrated below. <BR><BR><BR>
 </P>
 <P><A NAME="Fanout"></A><IMG SRC="LoveControllerControl.jpeg" NAME="Graphic4" ALIGN=LEFT WIDTH=373 HEIGHT=461 BORDER=0><BR CLEAR=LEFT><BR>Additionally,
 the “Fast Fanout” or “Slow Fanout” message buttons launch
@@ -426,13 +433,13 @@ records require modification to preserve any changes made at runtime.
 </P>
 <HR>
 <H2 ALIGN=CENTER>drvLove</H2>
-<P>The drvLove is a <SPAN LANG="en-US">multi device</SPAN> port
-driver that binds standard EPICS device support with the underlying
-serial bus. It allows a virtual connection to an individual
-controller to provide a means for debugging the communication. The
-asynRecord can be used to select the tracing masks for debugging
-communication.<BR><BR>The driver implements the asynDrvUser,
-asynCommon, asynInt32, and asynUInt32Digital interfaces.</P>
+<P>The drvLove is a multi device port driver that binds standard
+EPICS device support with the underlying serial bus. It allows a
+virtual connection to an individual controller to provide a means for
+debugging the communication. The asynRecord can be used to select the
+tracing masks for debugging communication.<BR><BR>The driver
+implements the asynDrvUser, asynCommon, asynInt32, and
+asynUInt32Digital interfaces.</P>
 <UL>
 	<LI><P STYLE="margin-bottom: 0in">asynDrvUser – Describes the
 	methods to allow an asynUser to communicate user specific
@@ -466,8 +473,7 @@ the moment there are two fanout records for fast and slow record
 processing, their scan rates can be adjusted from MEDM <A HREF="#Fanout">screens</A>
 . <B>Note</B> that the “getDecpts” PV must be in the “Fast”
 fanout record at all times. This value is required since it is used
-by many PVs to derive their floating point value.<BR><BR>
-</P>
+by many PVs to derive their floating point value.</P>
 <HR>
 <H2 ALIGN=CENTER>Operation</H2>
 <P>The driver is initialized during IOC startup by calling the
@@ -500,7 +506,7 @@ Versions: Release 4-5 and higher.
       binary form and accompanying documentation). Each licensee is addressed
       as &quot;you&quot; or &quot;Licensee.&quot;
 
-   2. The copyright holders shown above and their third-party <SPAN LANG="en-US">licensor's</SPAN> hereby
+   2. The copyright holders shown above and their third-party licensor's hereby
       grant Licensee a royalty-free nonexclusive license, subject to the
       limitations stated herein and U.S. Government license rights.
 
@@ -551,7 +557,6 @@ Versions: Release 4-5 and higher.
       REASON WHATSOEVER, WHETHER SUCH LIABILITY IS ASSERTED ON THE BASIS OF
       CONTRACT, TORT (INCLUDING NEGLIGENCE OR STRICT LIABILITY), OR OTHERWISE,
       EVEN IF ANY OF SAID PARTIES HAS BEEN WARNED OF THE POSSIBILITY OF SUCH
-      LOSS OR DAMAGES.
-</PRE>
+      LOSS OR DAMAGES.</PRE>
 </BODY>
 </HTML>
