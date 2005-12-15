@@ -13,7 +13,7 @@ include $(TOP)/configure/CONFIG
 DB += LoveController.db
 DB += LoveControllerControl.db
 
-DB += $(ASYN)/db/asynRecord.db
+DB_INSTALLS += $(ASYN)/db/asynRecord.db
 
 #----------------------------------------------------
 # If <anyname>.db template is not named <anyname>*.template add
