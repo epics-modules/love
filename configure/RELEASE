@@ -14,8 +14,9 @@ TEMPLATE_TOP=$(TOP)/../../../../base-3.14.6/templates/makeBaseApp/top
 #INSTALL_LOCATION_APP=<fullpathname>
 
 # Include synApps components
-ASYN=/corvette/home/epics/devel/asyn/4-4beta
-IPAC=/corvette/home/epics/devel/ipac/2-8
+SUPPORT=/home/oxygen/DKLINE/EPICS/synApps/support
+ASYN=$(SUPPORT)/asyn/4-3
+IPAC=$(SUPPORT)/ipac/2-8
 
 # EPICS_BASE usually appears last so other apps can override stuff:
-EPICS_BASE=/corvette/usr/local/epics/base-3.14.9beta
+EPICS_BASE=/home/oxygen/DKLINE/EPICS/base
