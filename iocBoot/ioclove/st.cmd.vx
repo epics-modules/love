@@ -66,17 +66,17 @@ asynSetOption("S0",0,"crtscts","N")
 #-----------------------------------------------------------------------------
 # Configure Love
 
-# Driver support
+# Driver support (NOTE: Love addr is hex)
 drvLoveInit("L0","S0",0)
-drvLoveConfig("L0",1,"1600")
-drvLoveConfig("L0",2,"1600")
-drvLoveConfig("L0",3,"1600")
-drvLoveConfig("L0",4,"16A")
+drvLoveConfig("L0",0x1,"1600")
+drvLoveConfig("L0",0x2,"1600")
+drvLoveConfig("L0",0x3,"1600")
+drvLoveConfig("L0",0x4,"16A")
 
 #-----------------------------------------------------------------------------
 # Load records
 
-# Asyn records for individual controllers
+# Asyn records for individual controllers (NOTE: Love addr is hex)
 dbLoadRecords("$(ASYN)/db/asynRecord.db","P=dmk0,R=PortS0,PORT=S0,ADDR=0,OMAX=0,IMAX=0")
 dbLoadRecords("$(ASYN)/db/asynRecord.db","P=dmk0,R=Instr1,PORT=L0,ADDR=0x01,OMAX=0,IMAX=0")
 dbLoadRecords("$(ASYN)/db/asynRecord.db","P=dmk0,R=Instr2,PORT=L0,ADDR=0x02,OMAX=0,IMAX=0")
