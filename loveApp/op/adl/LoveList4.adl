@@ -96,7 +96,7 @@ display {
 	}
 	control {
 		chan="$(P)$(Q1):Value.DESC"
-		clr=54
+		clr=51
 		bclr=14
 	}
 	limits {
@@ -346,7 +346,7 @@ menu {
 	}
 	control {
 		chan="$(P)$(Q2):Value.DESC"
-		clr=54
+		clr=51
 		bclr=14
 	}
 	limits {
@@ -531,7 +531,7 @@ rectangle {
 	}
 	control {
 		chan="$(P)$(Q3):Value.DESC"
-		clr=54
+		clr=51
 		bclr=14
 	}
 	limits {
@@ -716,7 +716,7 @@ rectangle {
 	}
 	control {
 		chan="$(P)$(Q4):Value.DESC"
-		clr=54
+		clr=51
 		bclr=14
 	}
 	limits {
