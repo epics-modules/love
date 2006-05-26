@@ -54,9 +54,9 @@
  Developer notes:
 
  Source control info:
-    Modified by:    $Author: rivers $
-                    $Date: 2005-12-15 19:57:04 $
-                    $Revision: 1.4 $
+    Modified by:    $Author: dkline $
+                    $Date: 2006-05-26 18:43:37 $
+                    $Revision: 1.5 $
 
  =============================================================================
  History:
@@ -65,6 +65,11 @@
  2005-Mar-25  DMK  Derived from lovelink interpose interface.
  2005-Mar-29  DMK  Initial development of the port driver complete.
  2005-Jul-21  DMK  Modified driver to support standard Asyn interfaces.
+ 2006-May-19  DMK  Corrected problem in sendCommand() on a retry. Removed
+                   'data' parameter since it is not really needed.
+ 2006-May-24  DMK  Modified 'TUNE' symbolic constant to 0.1 seconds.
+                   Modified evalMessage() to evaluate the message for an
+                   STX (0x02) character and message length < 7.
  -----------------------------------------------------------------------------
 
 */
@@ -107,7 +112,7 @@
 /* Define symbolic constants */
 #define K_INSTRMAX ( 256 )
 #define K_COMTMO   ( 1.0 )
-#define K_TUNE     ( 0.04 )
+#define K_TUNE     ( 0.1 )
 
 
 /* Forward struct declarations */
@@ -276,7 +281,7 @@ static void exceptCallback(asynUser* pasynUser,asynException exception);
 
 static asynStatus processWriteResponse(Port* pport);
 static asynStatus executeCommand(Port* pport,asynUser* pasynUser);
-static asynStatus sendCommand(void* ppvt,asynUser* pasynUser,const char* data);
+static asynStatus sendCommand(void* ppvt,asynUser* pasynUser,int retry);
 static asynStatus recvReply(void* ppvt,asynUser* pasynUser,char* data,size_t maxchars);
 
 static asynStatus setDefaultEos(Port* plov);
@@ -575,6 +580,19 @@ static asynStatus evalMessage(size_t* pcount,char* pinp,asynUser* pasynUser,char
 
     asynPrint(pasynUser,ASYN_TRACE_FLOW,"drvLove::evalMessage\n");
 
+    /* Evaluate message contents,length,... */
+    if( *pinp != '\002' )
+    {
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,"drvLove::evalMessage start char missing\n");
+        return( asynError );
+    }
+
+    if( *pcount < 7 )
+    {
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,"drvLove::evalMessage message length (%d) error\n",*pcount);
+        return( asynError );
+    }
+
     /* Process message given size */
     if( *pcount == 7 )
     {
@@ -724,7 +742,7 @@ static asynStatus executeCommand(Port* pport,asynUser* pasynUser)
     {
         epicsThreadSleep( K_TUNE );
 
-        sts = sendCommand(pport,pasynUser,pport->outMsg);
+        sts = sendCommand(pport,pasynUser,i);
         if( ISOK(sts) )
             asynPrint(pasynUser,ASYN_TRACEIO_FILTER,"drvLove::executeCommand write \"%s\"\n",pport->outMsg);
         else
@@ -780,7 +798,7 @@ static asynStatus processWriteResponse(Port* pport)
 }
 
 
-static asynStatus sendCommand(void* ppvt,asynUser* pasynUser,const char* data)
+static asynStatus sendCommand(void* ppvt,asynUser* pasynUser,int retry)
 {
     unsigned char cs;
     asynStatus sts;
@@ -789,30 +807,33 @@ static asynStatus sendCommand(void* ppvt,asynUser* pasynUser,const char* data)
     Port* plov = (Port*)ppvt;
     Serport* pser = plov->pserport;
 
-    asynPrint(pasynUser,ASYN_TRACE_FLOW,"drvLove::sendCommand\n");
+    asynPrint(pasynUser,ASYN_TRACE_FLOW,"drvLove::sendCommand - retries(%d)\n",retry);
 
-    sts = pasynManager->getAddr(pasynUser,&addr);
-    if( ISNOTOK(sts) )
-        return( sts );
+    if( retry == 0 )
+    {
+        sts = pasynManager->getAddr(pasynUser,&addr);
+        if( ISNOTOK(sts) )
+            return( sts );
 
-    sprintf(plov->tmpMsg,"%02X%s",addr,data);
-    calcChecksum(strlen(plov->tmpMsg),plov->tmpMsg,&cs);
-    sprintf(plov->outMsg,"\002L%s%2X",plov->tmpMsg,cs);
+        sprintf(plov->tmpMsg,"%02X%s",addr,plov->outMsg);
+        calcChecksum(strlen(plov->tmpMsg),plov->tmpMsg,&cs);
+        sprintf(plov->outMsg,"\002L%s%2X",plov->tmpMsg,cs);
+    }
+
     len = strlen(plov->outMsg);
-
-    sts = pser->pasynOctet->write(pser->pasynOctetPvt,pser->pasynUser,data,len,&bytesXfer);
+    sts = pser->pasynOctet->write(pser->pasynOctetPvt,pser->pasynUser,plov->outMsg,len,&bytesXfer);
     if( ISOK(sts) )
-        asynPrint(pasynUser,ASYN_TRACEIO_FILTER,"drvLove::sendCommand \"%s\"\n",data);
+        asynPrint(pasynUser,ASYN_TRACEIO_FILTER,"drvLove::sendCommand - retries(%d),data \"%s\" \"%s\"\n",retry,plov->outMsg);
     else
     {
         if( sts == asynTimeout )
-            asynPrint(pasynUser,ASYN_TRACE_ERROR,"drvLove::sendCommand asynTimeout\n");
+            asynPrint(pasynUser,ASYN_TRACE_ERROR,"drvLove::sendCommand - retries(%d) asynTimeout\n",retry);
         else if( sts == asynOverflow )
-            asynPrint(pasynUser,ASYN_TRACE_ERROR,"drvLove::sendCommand asynOverflow\n");
+            asynPrint(pasynUser,ASYN_TRACE_ERROR,"drvLove::sendCommand - retries(%d) asynOverflow\n",retry);
         else if( sts == asynError )
-            asynPrint(pasynUser,ASYN_TRACE_ERROR,"drvLove::sendCommand asynError\n");
+            asynPrint(pasynUser,ASYN_TRACE_ERROR,"drvLove::sendCommand - retries(%d) asynError\n",retry);
         else
-            asynPrint(pasynUser,ASYN_TRACE_ERROR,"drvLove::sendCommand failed - unknown Asyn error\n");
+            asynPrint(pasynUser,ASYN_TRACE_ERROR,"drvLove::sendCommand - retries(%d) failed - unknown Asyn error\n",retry);
     }
 
     return( sts );
@@ -832,6 +853,12 @@ static asynStatus recvReply(void* ppvt,asynUser* pasynUser,char* data,size_t max
     sts = pser->pasynOctet->read(pser->pasynOctetPvt,pser->pasynUser,data,maxchars,&bytesXfer,&eom);
     if( ISOK(sts) )
     {
+        if( eom != ASYN_EOM_EOS )
+        {
+            asynPrint(pasynUser,ASYN_TRACE_ERROR,"drvLove::recvReply eos failure\n");
+            return( asynError );
+        }
+
         sts = evalMessage(&bytesXfer,plov->inpMsg,pasynUser,data);
         asynPrint(pasynUser,ASYN_TRACEIO_FILTER,"drvLove::recvReply %d \"%s\"\n",bytesXfer,data);
     }
