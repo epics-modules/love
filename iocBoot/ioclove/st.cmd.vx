@@ -87,11 +87,11 @@ dbLoadRecords("$(ASYN)/db/asynRecord.db","P=dmk0,R=Instr4,PORT=L0,ADDR=0x04,OMAX
 dbLoadRecords("db/LoveController.db","P=dmk0:,Q=Love1:,PORT=L0,ADDR=0x01")
 dbLoadRecords("db/LoveControllerControl.db","P=dmk0:,Q=Love1:,PORT=L0,ADDR=0x01")
 
-#dbLoadRecords("db/LoveController.db","P=dmk0:,Q=Love2:,PORT=L0,ADDR=0x02")
-#dbLoadRecords("db/LoveControllerControl.db","P=dmk0:,Q=Love2:,PORT=L0,ADDR=0x01")
+dbLoadRecords("db/LoveController.db","P=dmk0:,Q=Love2:,PORT=L0,ADDR=0x02")
+dbLoadRecords("db/LoveControllerControl.db","P=dmk0:,Q=Love2:,PORT=L0,ADDR=0x01")
 
-#dbLoadRecords("db/LoveController.db","P=dmk0:,Q=Love3:,PORT=L0,ADDR=0x03")
-#dbLoadRecords("db/LoveControllerControl.db","P=dmk0:,Q=Love3:,PORT=L0,ADDR=0x01")
+dbLoadRecords("db/LoveController.db","P=dmk0:,Q=Love3:,PORT=L0,ADDR=0x03")
+dbLoadRecords("db/LoveControllerControl.db","P=dmk0:,Q=Love3:,PORT=L0,ADDR=0x01")
 
 dbLoadRecords("db/LoveController.db","P=dmk0:,Q=Love4:,PORT=L0,ADDR=0x04")
 dbLoadRecords("db/LoveControllerControl.db","P=dmk0:,Q=Love4:,PORT=L0,ADDR=0x01")
