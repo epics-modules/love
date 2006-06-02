@@ -1,11 +1,11 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
 <HTML>
 <HEAD>
-	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=utf-8">
+	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=iso-8859-1">
 	<TITLE>drvLove</TITLE>
-	<META NAME="GENERATOR" CONTENT="OpenOffice.org 1.1.3  (Linux)">
+	<META NAME="GENERATOR" CONTENT="StarOffice 7  (Solaris Sparc)">
 	<META NAME="CREATED" CONTENT="20050810;15185600">
-	<META NAME="CHANGED" CONTENT="20051209;8152600">
+	<META NAME="CHANGED" CONTENT="20060602;14153600">
 	<STYLE>
 	<!--
 		@page { size: 8.5in 11in }
@@ -15,9 +15,9 @@
 <BODY LANG="en-US" DIR="LTR">
 <H1 ALIGN=CENTER>love: Love Controller Driver Support 
 </H1>
-<P ALIGN=CENTER><FONT SIZE=4><B>Release 3-2-2</B></FONT></P>
+<P ALIGN=CENTER><FONT SIZE=4><B>Release 3-2-3</B></FONT></P>
 <P ALIGN=CENTER><FONT SIZE=4><B>David Kline</B></FONT></P>
-<P ALIGN=CENTER><FONT SIZE=4><B>December 2005</B></FONT></P>
+<P ALIGN=CENTER><FONT SIZE=4><B>June 2006</B></FONT></P>
 <H3 ALIGN=CENTER><BR><BR>
 </H3>
 <HR>
@@ -418,12 +418,12 @@ of the configuration parameters (i.e. set point 1 and scan rate). The
 display is illustrated below. <BR><BR><BR>
 </P>
 <P><A NAME="Fanout"></A><IMG SRC="LoveControllerControl.jpeg" NAME="Graphic4" ALIGN=LEFT WIDTH=373 HEIGHT=461 BORDER=0><BR CLEAR=LEFT><BR>Additionally,
-the “Fast Fanout” or “Slow Fanout” message buttons launch
-other screens that list which PVs are being acquired and at what
-rate. The user can enter additional PVs or change the data
-acquisition rate. Furthermore, it should be noted that once the IOC
-is rebooted, the fanout records will be reset to the original PVs.
-These displays are illustrated below. The corresponding database
+the &ldquo;Fast Fanout&rdquo; or &ldquo;Slow Fanout&rdquo; message
+buttons launch other screens that list which PVs are being acquired
+and at what rate. The user can enter additional PVs or change the
+data acquisition rate. Furthermore, it should be noted that once the
+IOC is rebooted, the fanout records will be reset to the original
+PVs. These displays are illustrated below. The corresponding database
 records require modification to preserve any changes made at runtime.
 <BR><BR><BR><BR>
 </P>
@@ -441,16 +441,17 @@ tracing masks for debugging communication.<BR><BR>The driver
 implements the asynDrvUser, asynCommon, asynInt32, and
 asynUInt32Digital interfaces.</P>
 <UL>
-	<LI><P STYLE="margin-bottom: 0in">asynDrvUser – Describes the
+	<LI><P STYLE="margin-bottom: 0in">asynDrvUser &ndash; Describes the
 	methods to allow an asynUser to communicate user specific
 	information to/from the port driver.</P>
-	<LI><P STYLE="margin-bottom: 0in">asynCommon – Describes the
+	<LI><P STYLE="margin-bottom: 0in">asynCommon &ndash; Describes the
 	methods that must be implemented by drivers for reporting driver
 	information and how to connect or disconnect from the driver.</P>
-	<LI><P STYLE="margin-bottom: 0in">asynInt32 – Describes the
+	<LI><P STYLE="margin-bottom: 0in">asynInt32 &ndash; Describes the
 	methods that use integers for communicating with a device.</P>
-	<LI><P STYLE="margin-bottom: 0in">asynUInt32Digital – Describes
-	the methods for communicating via bits of an Int32 register.</P>
+	<LI><P STYLE="margin-bottom: 0in">asynUInt32Digital &ndash;
+	Describes the methods for communicating via bits of an Int32
+	register.</P>
 </UL>
 <HR>
 <H2 ALIGN=CENTER STYLE="margin-top: 0in; margin-bottom: 0in">Database</H2>
@@ -468,30 +469,30 @@ decimal points and the set point record values, then uses its CALC
 equation to determine the final floating point set point value. By
 default, both the base and composite records are process passive and
 are processed using fanout records. The fanout records are used to
-“drive” the processing rate of the base and composite records. At
-the moment there are two fanout records for fast and slow record
-processing, their scan rates can be adjusted from MEDM <A HREF="#Fanout">screens</A>
-. <B>Note</B> that the “getDecpts” PV must be in the “Fast”
-fanout record at all times. This value is required since it is used
-by many PVs to derive their floating point value.</P>
+&ldquo;drive&rdquo; the processing rate of the base and composite
+records. At the moment there are two fanout records for fast and slow
+record processing, their scan rates can be adjusted from MEDM <A HREF="#Fanout">screens</A>
+. <B>Note</B> that the &ldquo;getDecpts&rdquo; PV must be in the
+&ldquo;Fast&rdquo; fanout record at all times. This value is required
+since it is used by many PVs to derive their floating point value.</P>
 <HR>
 <H2 ALIGN=CENTER>Operation</H2>
 <P>The driver is initialized during IOC startup by calling the
-drvLoveInit method passing the driver name (i.e. “LO”) and the
-name of the serial port. The initialization method first connects
-with the serial port name and finds the asynOctet interface. Then it
-registers the port driver name with Asyn and the interfaces it
-supports (i.e. asynDrvUser, asynCommon, asynInt32, and
+drvLoveInit method passing the driver name (i.e. &ldquo;LO&rdquo;)
+and the name of the serial port. The initialization method first
+connects with the serial port name and finds the asynOctet interface.
+Then it registers the port driver name with Asyn and the interfaces
+it supports (i.e. asynDrvUser, asynCommon, asynInt32, and
 asynUInt32Digital). The port driver must be made aware of the
 controller models on the serial bus. To do this the startup script
 calls the drvLoveConfig method passing the port driver name (i.e.
-“LO”), the controller address (i.e. 1..256), and the controller
-model string (i.e. “16A” or “1600”). After this, the database
-can be loaded creating the record instances that support the
-controllers.<BR><BR>Prior to initializing the driver, Asyn and the
-underlying serial bus must be initialized. Refer to the
-target-specific startup script located in the iocBoot directory for
-details related to initialization.</P>
+&ldquo;LO&rdquo;), the controller address (i.e. 1..256), and the
+controller model string (i.e. &ldquo;16A&rdquo; or &ldquo;1600&rdquo;).
+After this, the database can be loaded creating the record instances
+that support the controllers.<BR><BR>Prior to initializing the
+driver, Asyn and the underlying serial bus must be initialized. Refer
+to the target-specific startup script located in the iocBoot
+directory for details related to initialization.</P>
 <HR>
 <H2 ALIGN=CENTER><A NAME="LicenseAgreement"></A>License Agreement</H2>
 <PRE>Copyright (c) 2004 University of Chicago and the Regents of the University of
