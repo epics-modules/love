@@ -1,0 +1,31 @@
+# ### love.iocsh ###
+
+#- ###################################################
+#- PREFIX         - IOC Prefix
+#- PORT           - Name to give the driver's asyn port
+#- SERIAL         - Name of the serial port used for communications.
+#-                  Only needed for the first device initialized for a
+#-                  given controller.
+#- 
+#- ADDR           - Controller's address in hex
+#- INSTANCE       - Love controller instance prefix, support will create
+#-                  an asyn record called asyn_$(INSTANCE)
+#- MODEL          - Device model being initialized on given address
+#- ###################################################
+
+
+$(LOVE_$(PORT)_INITIALIZED="") asynSetOption("$(SERIAL)", -1, "baud",    "19200")
+$(LOVE_$(PORT)_INITIALIZED="") asynSetOption("$(SERIAL)", -1, "bits",    "8")
+$(LOVE_$(PORT)_INITIALIZED="") asynSetOption("$(SERIAL)", -1, "stop",    "1")
+$(LOVE_$(PORT)_INITIALIZED="") asynSetOption("$(SERIAL)", -1, "parity",  "none")
+$(LOVE_$(PORT)_INITIALIZED="") asynSetOption("$(SERIAL)", -1, "clocal",  "Y")
+$(LOVE_$(PORT)_INITIALIZED="") asynSetOption("$(SERIAL)", -1, "crtscts", "N")
+$(LOVE_$(PORT)_INITIALIZED="") drvLoveInit("$(PORT)", "$(SERIAL)", 0)
+epicsEnvSet("LOVE_$(PORT)_INITIALIZED", "#-")
+
+
+drvLoveConfig("$(PORT)", $(ADDR), "$(MODEL)")
+
+dbLoadRecords("$(LOVE)/db/LoveController.db", "P=$(PREFIX), Q=$(INSTANCE):, PORT=$(PORT), ADDR=$(ADDR)")
+dbLoadRecords("$(LOVE)/db/LoveControllerControl.db", "P=$(PREFIX), Q=$(INSTANCE):, PORT=$(PORT), ADDR=$(ADDR)")
+dbLoadRecords("$(ASYN)/db/asynRecord.db", "P=$(PREFIX), R=$(INSTANCE), PORT=$(PORT), ADDR=$(ADDR), OMAX=0, IMAX=0")
