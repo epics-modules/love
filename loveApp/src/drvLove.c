@@ -70,6 +70,8 @@
  2006-May-24  DMK  Modified 'TUNE' symbolic constant to 0.1 seconds.
                    Modified evalMessage() to evaluate the message for an
                    STX (0x02) character and message length < 7.
+ 2016-Sep-24  RLS  Fix for hanging on lockPort() at boot-up; remove
+                   asynLockPortNotify interface
  -----------------------------------------------------------------------------
 
 */
@@ -303,10 +305,8 @@ static asynStatus getType(void* ppvt,asynUser* pasynUser,const char** pptypeName
 static asynDrvUser drvuser = {create,getType,destroy};
 
 
-/* asynLockPortNotify methods */
 static asynStatus lockPort(void *drvPvt,asynUser *pasynUser);
 static asynStatus unlockPort(void *drvPvt,asynUser *pasynUser);
-static asynLockPortNotify lockport = {lockPort,unlockPort};
 
 
 /* Forward references for asynInt32 methods */
@@ -389,17 +389,6 @@ int drvLoveInit(const char* lovPort,const char* serPort,int serAddr)
     if( ISNOTOK(sts) )
     {
         printf("drvLoveInit::failure to register asynDrvUser\n");
-        return( -1 );
-    }
-
-    plov->asynLockPort.interfaceType = asynLockPortNotifyType;
-    plov->asynLockPort.pinterface = &lockport;
-    plov->asynLockPort.drvPvt = plov;
-
-    sts = pasynManager->registerInterface(lovPort,&plov->asynLockPort);
-    if( ISNOTOK(sts) )
-    {
-        printf("drvLoveInit::failure to register asynLockPort\n");
         return( -1 );
     }
 
