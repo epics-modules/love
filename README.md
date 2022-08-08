@@ -1,3 +1,5 @@
+[![LOVE](https://github.com/epics-modules/love/actions/workflows/ci-scripts-build.yml/badge.svg)](https://github.com/epics-modules/love/actions/workflows/ci-scripts-build.yml)
+
 # love
 APS BCDA synApps module: love
 
