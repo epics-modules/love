@@ -39,9 +39,6 @@ Files
 
 The files listed below are the primary ones in the identified directory.
 
- 
-
-.
 
 * start\_epics\_love - Main MEDM screen startup.
  
