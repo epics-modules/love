@@ -1,163 +1,176 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
-<HTML>
-<HEAD>
-	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=iso-8859-1">
-	<TITLE>Love Controller Release Notes</TITLE>
-	<META NAME="GENERATOR" CONTENT="StarOffice 7  (Solaris Sparc)">
-	<META NAME="CREATED" CONTENT="20041223;10520000">
-	<META NAME="CHANGED" CONTENT="20060602;14140400">
-</HEAD>
-<BODY LANG="en-US" BGCOLOR="#ffffff" DIR="LTR">
-<H2 ALIGN=CENTER>love Release Notes</H2>
-<P>This document describes the changes which have been made to the
-synApps / Love controller support software. The earliest version
-appears at the bottom, with more recent releases above it.</P>
-<H2 ALIGN=LEFT>Release 3-2-8</H2>
-<ul>
-<li>iocsh files installed to top level folder from loveApp/iocsh</li>
-</ul>
-	
-<H2 ALIGN=LEFT>Release 3-2-7</H2>
-<ul>
-<li>Added iocsh startup files</li>
-<li>req files installed to top level db folder</li>
-</ul>
-	
-<H2 ALIGN=LEFT>Release 3-2-5</H2>
-<ul>
-<li>Modified RELEASE; deleted RELEASE.arch
-<li>Added .opi files for CSS-BOY
-</ul>
+---
+layout: default
+title: Release Notes
+nav_order: 4
+---
 
-<H2 ALIGN=LEFT>Release 3-2-3</H2>
-<P ALIGN=LEFT>This major version has minor changes:</P>
-<P STYLE="margin-bottom: 0in">Modified:</P>
-<UL>
-	<LI><P ALIGN=LEFT STYLE="margin-bottom: 0in">Corrected a problem
-	when communication would timeout.</P>
-	<LI><P ALIGN=LEFT STYLE="margin-bottom: 0in">Modified MEDM screen
-	field colors.</P>
-	<LI><P ALIGN=LEFT STYLE="margin-bottom: 0in">Added .req file for
-	save/restore.</P>
-</UL>
-<H2 ALIGN=LEFT>Release 3-2-2</H2>
-<P ALIGN=LEFT>This major version has minor changes:</P>
-<P STYLE="margin-bottom: 0in">Modified:</P>
-<UL>
-	<LI><P ALIGN=LEFT STYLE="margin-bottom: 0in">Primary MEDM screen.</P>
-	<LI><P ALIGN=LEFT STYLE="margin-bottom: 0in">Modified startup
-	scripts for Linux.</P>
-</UL>
-<P STYLE="margin-bottom: 0in"><BR>
-</P>
-<P STYLE="margin-bottom: 0in">Changed:</P>
-<UL>
-	<LI><P STYLE="margin-bottom: 0in">Added devLove.dbd which is
-	necessary for other components/applications to have Love Controller
-	support.</P>
-</UL>
-<H2 ALIGN=LEFT>Release 3-2-0</H2>
-<P ALIGN=LEFT>This major version has significant architecture changes
-and provides the following:</P>
-<P STYLE="margin-bottom: 0in">Modified:</P>
-<UL>
-	<LI><P ALIGN=LEFT STYLE="margin-bottom: 0in">Module drvLove
-	implements the standard Asyn intefaces asynInt32,
-	asynUInt32Digitial, and asynDrvUser,</P>
-</UL>
-<P STYLE="margin-bottom: 0in"><BR>
-</P>
-<P STYLE="margin-bottom: 0in">Changed:</P>
-<UL>
-	<LI><P STYLE="margin-bottom: 0in">Enhanced MEDM screens for
-	diagnostics,</P>
-	<LI><P STYLE="margin-bottom: 0in">Database for monitoring and
-	setting controllers,</P>
-	<LI><P STYLE="margin-bottom: 0in">Removed all unused files (i.e.
-	sources, databases, MEDM screens),</P>
-</UL>
-<H2 ALIGN=LEFT>Release 3-1-0</H2>
-<P ALIGN=LEFT>This major version has significant architecture changes
-and provides the following:</P>
-<P STYLE="margin-bottom: 0in">Added:</P>
-<UL>
-	<LI><P ALIGN=LEFT STYLE="margin-bottom: 0in">Module drvLove,
-	multidevice port driver,</P>
-</UL>
-<UL>
-	<LI><P STYLE="margin-bottom: 0in">Module ifaceLove, Love-specific
-	interface,</P>
-	<LI><P STYLE="margin-bottom: 0in">Module devLove, device support,</P>
-</UL>
-<P STYLE="margin-bottom: 0in"><BR>
-</P>
-<P STYLE="margin-bottom: 0in">Changed:</P>
-<UL>
-	<LI><P STYLE="margin-bottom: 0in">Supports the ai,ao,bi,bo, and mbbi
-	record types, removed support for longin,</P>
-	<LI><P STYLE="margin-bottom: 0in">Enhanced MEDM screens for
-	diagnostics,</P>
-	<LI><P STYLE="margin-bottom: 0in">Format of INP/OUT field has been
-	modified, refer to database definition files,</P>
-	<LI><P STYLE="margin-bottom: 0in">Removed all unused files (i.e.
-	sources, databases, MEDM screens),</P>
-</UL>
-<H2 ALIGN=LEFT>Release 3-0-1</H2>
-<P ALIGN=LEFT>This minor version provides the following:</P>
-<P ALIGN=LEFT>Added:</P>
-<UL>
-	<LI><P STYLE="margin-bottom: 0in">Support for the longin record
-	type,</P>
-</UL>
-<P STYLE="margin-bottom: 0in"><BR>
-</P>
-<P STYLE="margin-bottom: 0in">Changed:</P>
-<UL>
-	<LI><P STYLE="margin-bottom: 0in">Modified MEDM screens for
-	accuracy,</P>
-	<LI><P STYLE="margin-bottom: 0in">The location of the MEDM screens
-	has been changed for consistency with other synApps modules,</P>
-	<LI><P STYLE="margin-bottom: 0in">Corrected a problem where the
-	loveApp would not build under Solaris and other operating systems,</P>
-	<LI><P STYLE="margin-bottom: 0in">Applied comments / suggestions
-	from code inspections,</P>
-</UL>
-<H2 ALIGN=LEFT>Release 3-0-0</H2>
-<P ALIGN=LEFT>This major version provides new support for the love
-controllers based on Asyn. It was tested using base 3.14.6 and
-3.14.7, Asyn 4.2, and Ipac 2.7a and 2.8. 
-</P>
-<P ALIGN=LEFT>Added:</P>
-<UL>
-	<LI><P STYLE="margin-bottom: 0in">Asyn device support for the ao,
-	ai, bo, bi, and mbbi record types,</P>
-	<LI><P STYLE="margin-bottom: 0in">Asyn Interpose interface for
-	Lovelink,</P>
-	<LI><P STYLE="margin-bottom: 0in">An sample application and database
-	is provided that works under vxWorks and Linux,</P>
-	<LI><P STYLE="margin-bottom: 0in">Startup scripts for vxWorks and
-	Linux are provided to configure Ipac, Asyn, and the Interpose
-	interface,</P>
-	<LI><P STYLE="margin-bottom: 0in">MEDM displays are provided to
-	compliment the sample application,</P>
-</UL>
-<P STYLE="margin-bottom: 0in"><BR>
-</P>
-<P STYLE="margin-bottom: 0in">Changed:</P>
-<P STYLE="margin-bottom: 0in"><BR>
-</P>
-<UL>
-	<LI><P STYLE="margin-bottom: 0in">Supported for EPICS base 3.14.6 or
-	greater,</P>
-	<LI><P STYLE="margin-bottom: 0in">MPF is no longer supported;
-	however, the source code is preserved only for historical purposes,</P>
-</UL>
-<H2 ALIGN=LEFT>Release 2-0-0</H2>
-<P>Converted to EPICS 3.14 (vxWorks only).</P>
-<H2>Release 1-3-0</H2>
-<P ALIGN=LEFT>Support for MPF R1-10's new &quot;bind&quot; call for
-DevMpf.</P>
-<ADDRESS STYLE="text-align: left">Suggestions and Comments to: <BR><A HREF="mailto:dkline@aps.anl.gov">David
-Kline </A>: (dkline@aps.anl.gov) <BR>Last modified: June 2, 2006</ADDRESS>
-</BODY>
-</HTML>
+
+love Release Notes
+------------------
+
+This document describes the changes which have been made to the synApps / Love controller support software. The earliest version appears at the bottom, with more recent releases above it.
+
+Release 3-2-8
+-------------
+
+*   iocsh files installed to top level folder from loveApp/iocsh
+
+Release 3-2-7
+-------------
+
+*   Added iocsh startup files
+*   req files installed to top level db folder
+
+Release 3-2-5
+-------------
+
+*   Modified RELEASE; deleted RELEASE.arch
+*   Added .opi files for CSS-BOY
+
+Release 3-2-3
+-------------
+
+This major version has minor changes:
+
+Modified:
+
+*   Corrected a problem when communication would timeout.
+    
+*   Modified MEDM screen field colors.
+    
+*   Added .req file for save/restore.
+    
+
+Release 3-2-2
+-------------
+
+This major version has minor changes:
+
+Modified:
+
+*   Primary MEDM screen.
+    
+*   Modified startup scripts for Linux.
+    
+
+  
+
+Changed:
+
+*   Added devLove.dbd which is necessary for other components/applications to have Love Controller support.
+    
+
+Release 3-2-0
+-------------
+
+This major version has significant architecture changes and provides the following:
+
+Modified:
+
+*   Module drvLove implements the standard Asyn intefaces asynInt32, asynUInt32Digitial, and asynDrvUser,
+    
+
+  
+
+Changed:
+
+*   Enhanced MEDM screens for diagnostics,
+    
+*   Database for monitoring and setting controllers,
+    
+*   Removed all unused files (i.e. sources, databases, MEDM screens),
+    
+
+Release 3-1-0
+-------------
+
+This major version has significant architecture changes and provides the following:
+
+Added:
+
+*   Module drvLove, multidevice port driver,
+    
+
+*   Module ifaceLove, Love-specific interface,
+    
+*   Module devLove, device support,
+    
+
+  
+
+Changed:
+
+*   Supports the ai,ao,bi,bo, and mbbi record types, removed support for longin,
+    
+*   Enhanced MEDM screens for diagnostics,
+    
+*   Format of INP/OUT field has been modified, refer to database definition files,
+    
+*   Removed all unused files (i.e. sources, databases, MEDM screens),
+    
+
+Release 3-0-1
+-------------
+
+This minor version provides the following:
+
+Added:
+
+*   Support for the longin record type,
+    
+
+  
+
+Changed:
+
+*   Modified MEDM screens for accuracy,
+    
+*   The location of the MEDM screens has been changed for consistency with other synApps modules,
+    
+*   Corrected a problem where the loveApp would not build under Solaris and other operating systems,
+    
+*   Applied comments / suggestions from code inspections,
+    
+
+Release 3-0-0
+-------------
+
+This major version provides new support for the love controllers based on Asyn. It was tested using base 3.14.6 and 3.14.7, Asyn 4.2, and Ipac 2.7a and 2.8.
+
+Added:
+
+*   Asyn device support for the ao, ai, bo, bi, and mbbi record types,
+    
+*   Asyn Interpose interface for Lovelink,
+    
+*   An sample application and database is provided that works under vxWorks and Linux,
+    
+*   Startup scripts for vxWorks and Linux are provided to configure Ipac, Asyn, and the Interpose interface,
+    
+*   MEDM displays are provided to compliment the sample application,
+    
+
+  
+
+Changed:
+
+  
+
+*   Supported for EPICS base 3.14.6 or greater,
+    
+*   MPF is no longer supported; however, the source code is preserved only for historical purposes,
+    
+
+Release 2-0-0
+-------------
+
+Converted to EPICS 3.14 (vxWorks only).
+
+Release 1-3-0
+-------------
+
+Support for MPF R1-10's new "bind" call for DevMpf.
+
+Suggestions and Comments to:  
+[David Kline](mailto:dkline@aps.anl.gov) : (dkline@aps.anl.gov)  
+Last modified: June 2, 2006
