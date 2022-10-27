@@ -14,7 +14,6 @@ love: Love Controller Driver Support
 
 **June 2006**
 
-###   
   
 
 * * *
@@ -44,192 +43,87 @@ The files listed below are the primary ones in the identified directory.
 
 .
 
-start\_epics\_love
-
-Main MEDM screen startup.
-
-  
-  
-
+* start\_epics\_love - Main MEDM screen startup.
  
+* ./docs
 
-./documentation
+    * devAsynLoveCrossTraining.ppt - Power point presentation given during a BCDA group meeting.
 
-devAsynLoveCrossTraining.ppt
+    * devAsynLove.ppt - Power point presentation given during the EPICS collaboration meeting in Spring of 2005 ([click here](http://www-ssrl.slac.stanford.edu/lcls/epics/agenda.php)).
 
-Power point presentation given during a BCDA group meeting.
+    * loveDriver.md - This document.
 
-devAsynLove.ppt
+    * loveKnownIssues.md - List of known issues for each release.
 
-Power point presentation given during the EPICS collaboration meeting in Spring of 2005 ([click here](http://www-ssrl.slac.stanford.edu/lcls/epics/agenda.php)).
+    * loveReleaseNotes.html - Notes for current and previous releases.
 
-loveDriver.html
-
-This document.
-
-loveKnownIssues.html
-
-List of known issues for each release.
-
-loveReleaseNotes.html
-
-Notes for current and previous releases.
-
-WIRING
-
-Diagram for wiring the controllers and other information.
-
-  
-  
-
+    * WIRING - Diagram for wiring the controllers and other information.
  
+* ./documentation/1600
 
-./documentation/1600
+    * 1600\_Calibration.pdf - Calibration document for the 1600.
 
-1600\_Calibration.pdf
+    * 1600\_CommProtocol.pdf - Communication protocol/commands for the 1600.
 
-Calibration document for the 1600.
+    * 1600\_Documentation.pdf - Users manual.
+    
+* ./documentation/16A
 
-1600\_CommProtocol.pdf
+    * 16A\_Calibration.pdf - Calibration document for the 16A.
 
-Communication protocol/commands for the 1600.
+    * 16A\_CommDoc.pdf - Communication protocol/commands for the 16A.
 
-1600\_Documentation.pdf
+    * 16A\_CommProtocol.pdf - Instructions about how to write your own application to communicate with the 16A.
 
-Users manual.
+    * 16A\_DataSheet.pdf - General information.
 
-  
-  
+    * 16A\_Documentation.pdf - Users manual.
 
- 
+    * 16A\_FlowChart.pdf - Programming flow chart.
 
-./documentation/16A
+* ./documentation/485LDRC
 
-16A\_Calibration.pdf
+    * 485LDRC\_Connections.gif - Wiring diagram.
 
-Calibration document for the 16A.
+    * 485LDRC\_Datasheet.pdf - General information.
 
-16A\_CommDoc.pdf
+    * 485LDRC\_Dimentions.gif - Installation diagram.
 
-Communication protocol/commands for the 16A.
+* ./iocBoot/ioclove
 
-16A\_CommProtocol.pdf
+    * st.cmd.linux - Startup script for Linux-based IOCs.
 
-Instructions about how to write your own application to communicate with the 16A.
+    * st.cmd.vx - Startup script for vxWorks-based IOCs.
 
-16A\_DataSheet.pdf
+* ./loveApp/Db
 
-General information.
+    * LoveControllerControl.db - PVs for setting controller configuration.
 
-16A\_Documentation.pdf
+    * LoveController.db - PVs for reading information from the controller.
 
-Users manual.
+    * Love\_settings.req - Request file for auto save/restore.
 
-16A\_FlowChart.pdf
+* ./loveApp/op/adl
 
-Programming flow chart.
+    * LoveController.adl - Main read back screen.
 
-  
-  
+    * LoveControllerControl.adl - Displays additional read back and configuration information.
 
- 
+    * LoveControllerFanout.adl - Displays PV and rate information.
 
-./documentation/485LDRC
+* ./loveApp/src
 
-485LDRC\_Connections.gif
+    * drvLove.c - Asyn-based multi device port driver.
 
-Wiring diagram.
+    * loveAppCommonInclude.dbd - Basic database definition from base, Asyn, and for Love controller support.
 
-485LDRC\_Datasheet.pdf
+    * loveAppInclude.dbd - Primary database definition file.
 
-General information.
+    * loveAppVXInclude.dbd - vxWorks-specific database definition file.
 
-485LDRC\_Dimentions.gif
+    * devLove.dbd - Necessary for other components to import Love Controller support.
 
-Installation diagram.
 
-  
-  
-
- 
-
-./iocBoot/ioclove
-
-st.cmd.linux
-
-Startup script for Linux-based IOCs.
-
-st.cmd.vx
-
-Startup script for vxWorks-based IOCs.
-
-  
-  
-
- 
-
-./loveApp/Db
-
-LoveControllerControl.db
-
-PVs for setting controller configuration.
-
-LoveController.db
-
-PVs for reading information from the controller.
-
-Love\_settings.req
-
-Request file for auto save/restore.
-
-  
-  
-
- 
-
-./loveApp/op/adl
-
-LoveController.adl
-
-Main read back screen.
-
-LoveControllerControl.adl
-
-Displays additional read back and configuration information.
-
-LoveControllerFanout.adl
-
-Displays PV and rate information.
-
-  
-  
-
- 
-
-./loveApp/src
-
-drvLove.c
-
-Asyn-based multi device port driver.
-
-loveAppCommonInclude.dbd
-
-Basic database definition from base, Asyn, and for Love controller support.
-
-loveAppInclude.dbd
-
-Primary database definition file.
-
-loveAppVXInclude.dbd
-
-vxWorks-specific database definition file.
-
-devLove.dbd
-
-Necessary for other components to import Love Controller support.
-
-  
-  
 
 * * *
 
