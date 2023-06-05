@@ -10,6 +10,11 @@ love Release Notes
 
 This document describes the changes which have been made to the synApps / Love controller support software. The earliest version appears at the bottom, with more recent releases above it.
 
+Release 3-2-9
+-------------
+
+*   Documentation converted to github pages
+
 Release 3-2-8
 -------------
 
