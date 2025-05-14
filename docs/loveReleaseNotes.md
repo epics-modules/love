@@ -176,6 +176,3 @@ Release 1-3-0
 
 Support for MPF R1-10's new "bind" call for DevMpf.
 
-Suggestions and Comments to:  
-[David Kline](mailto:dkline@aps.anl.gov) : (dkline@aps.anl.gov)  
-Last modified: June 2, 2006
