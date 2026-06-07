@@ -1,0 +1,2 @@
+LOVE_IOC_DBDS = devLove.dbd
+LOVE_IOC_LIBS = love

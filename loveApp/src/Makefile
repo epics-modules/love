@@ -10,6 +10,8 @@ include $(TOP)/configure/CONFIG
 # Build an IOC support library
 LIBRARY_IOC += love
 
+CFG += LOVE_DEPS
+
 #-----------------------------------------------------------------------------
 # Install database definition files into <top>/dbd
 DBD += devLove.dbd
