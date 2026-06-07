@@ -16,14 +16,14 @@ sysCplusEnable=1
 #-----------------------------------------------------------------------------
 # Load custom EPICS software from user tree and from share
 cd topbin
-ld < loveApp.munch
+ld < loveExApp.munch
 cd startup
 
 #-----------------------------------------------------------------------------
 # Load database
 cd top
-dbLoadDatabase( "dbd/loveAppVX.dbd" )
-loveAppVX_registerRecordDeviceDriver(pdbbase)
+dbLoadDatabase( "dbd/loveExApp.dbd" )
+loveExApp_registerRecordDeviceDriver(pdbbase)
 
 #-----------------------------------------------------------------------------
 # Configure components
@@ -84,17 +84,17 @@ dbLoadRecords("$(ASYN)/db/asynRecord.db","P=dmk0,R=Instr3,PORT=L0,ADDR=0x03,OMAX
 dbLoadRecords("$(ASYN)/db/asynRecord.db","P=dmk0,R=Instr4,PORT=L0,ADDR=0x04,OMAX=0,IMAX=0")
 
 # For beamline database
-dbLoadRecords("db/LoveController.db","P=dmk0:,Q=Love1:,PORT=L0,ADDR=0x01")
-dbLoadRecords("db/LoveControllerControl.db","P=dmk0:,Q=Love1:,PORT=L0,ADDR=0x01")
+dbLoadRecords("$(LOVE)/db/LoveController.db","P=dmk0:,Q=Love1:,PORT=L0,ADDR=0x01")
+dbLoadRecords("$(LOVE)/db/LoveControllerControl.db","P=dmk0:,Q=Love1:,PORT=L0,ADDR=0x01")
 
-dbLoadRecords("db/LoveController.db","P=dmk0:,Q=Love2:,PORT=L0,ADDR=0x02")
-dbLoadRecords("db/LoveControllerControl.db","P=dmk0:,Q=Love2:,PORT=L0,ADDR=0x01")
+dbLoadRecords("$(LOVE)/db/LoveController.db","P=dmk0:,Q=Love2:,PORT=L0,ADDR=0x02")
+dbLoadRecords("$(LOVE)/db/LoveControllerControl.db","P=dmk0:,Q=Love2:,PORT=L0,ADDR=0x01")
 
-dbLoadRecords("db/LoveController.db","P=dmk0:,Q=Love3:,PORT=L0,ADDR=0x03")
-dbLoadRecords("db/LoveControllerControl.db","P=dmk0:,Q=Love3:,PORT=L0,ADDR=0x01")
+dbLoadRecords("$(LOVE)/db/LoveController.db","P=dmk0:,Q=Love3:,PORT=L0,ADDR=0x03")
+dbLoadRecords("$(LOVE)/db/LoveControllerControl.db","P=dmk0:,Q=Love3:,PORT=L0,ADDR=0x01")
 
-dbLoadRecords("db/LoveController.db","P=dmk0:,Q=Love4:,PORT=L0,ADDR=0x04")
-dbLoadRecords("db/LoveControllerControl.db","P=dmk0:,Q=Love4:,PORT=L0,ADDR=0x01")
+dbLoadRecords("$(LOVE)/db/LoveController.db","P=dmk0:,Q=Love4:,PORT=L0,ADDR=0x04")
+dbLoadRecords("$(LOVE)/db/LoveControllerControl.db","P=dmk0:,Q=Love4:,PORT=L0,ADDR=0x01")
 
 #-----------------------------------------------------------------------------
 # Start IOC
@@ -102,4 +102,3 @@ iocInit()
 
 #
 #=============================================================================
-

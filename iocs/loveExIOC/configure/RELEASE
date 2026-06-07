@@ -1,0 +1,11 @@
+# RELEASE - Location of external support modules
+
+LOVE = $(TOP)/../..
+
+# Pull in EPICS_BASE and other paths from the parent module
+-include $(LOVE)/configure/RELEASE
+-include $(LOVE)/configure/RELEASE.local
+
+# These lines allow developers to override these RELEASE settings
+# without having to modify this file directly.
+-include $(TOP)/configure/RELEASE.local
