@@ -1,258 +1,198 @@
 ---
 layout: default
-title: Love Driver
-nav_order: 2
+title: User Guide
+nav_order: 3
 ---
 
+# User Guide
+{: .no_toc}
+
+## Table of contents
+{: .no_toc .text-delta}
+
+- TOC
+{:toc}
+
+## IOC Startup
+
+### Using the iocsh snippet
+
+The recommended way to configure Love controllers is with the
+`love.iocsh` snippet. It handles serial port configuration, driver
+initialization, and database loading for each controller instance.
+
+```
+iocshLoad("$(LOVE)/iocsh/love.iocsh", "PREFIX=ioc:, PORT=L0, SERIAL=S0, ADDR=0x01, INSTANCE=Love1, MODEL=1600")
+iocshLoad("$(LOVE)/iocsh/love.iocsh", "PREFIX=ioc:, PORT=L0, SERIAL=S0, ADDR=0x02, INSTANCE=Love2, MODEL=16A")
+```
+
+The snippet macros are:
+
+| Macro | Description |
+| - | - |
+| `PREFIX` | IOC PV prefix |
+| `PORT` | Name for the Love driver's asyn port |
+| `SERIAL` | Name of the asyn serial port (only needed for the first controller on a given port) |
+| `ADDR` | Controller address on the RS-485 bus (hex) |
+| `INSTANCE` | Controller instance name, used as a PV name component |
+| `MODEL` | Controller model: `1600` or `16A` |
 
-love: Love Controller Driver Support
-====================================
+The serial port must be configured with `drvAsynSerialPortConfigure`
+before the first `iocshLoad` call for a given `PORT`. The snippet
+automatically sets serial options (19200 baud, 8N1, no flow control)
+and calls `drvLoveInit` on the first invocation for each port.
+
+### Manual configuration
 
-**Release 3-2-3**
+For direct control over initialization, use the iocsh commands
+individually. An asyn serial port must be configured first:
 
-**David Kline**
+```
+drvAsynSerialPortConfigure("S0", "/dev/ttyS0", 0, 0, 0)
+asynSetOption("S0", 0, "baud", "19200")
+asynSetOption("S0", 0, "bits", "8")
+asynSetOption("S0", 0, "parity", "none")
+asynSetOption("S0", 0, "stop", "1")
+asynSetOption("S0", 0, "clocal", "Y")
+asynSetOption("S0", 0, "crtscts", "N")
+```
 
-**June 2006**
+Then initialize the Love driver and configure each controller:
 
-  
+```
+drvLoveInit("L0", "S0", 0)
+drvLoveConfig("L0", 0x01, "1600")
+drvLoveConfig("L0", 0x02, "1600")
+drvLoveConfig("L0", 0x03, "16A")
+```
 
-* * *
+`drvLoveInit` creates the asyn port driver and connects it to the
+serial port. `drvLoveConfig` registers a controller at the given
+address (1--256, hex) with the specified model.
 
-License Agreement
------------------
+After configuration, load the database records for each controller:
 
-This product is available via the [open source license](#LicenseAgreement) described at the end of this document.
+```
+dbLoadRecords("$(LOVE)/db/LoveController.db", "P=ioc:, Q=Love1:, PORT=L0, ADDR=0x01")
+dbLoadRecords("$(LOVE)/db/LoveControllerControl.db", "P=ioc:, Q=Love1:, PORT=L0, ADDR=0x01")
+```
 
-* * *
+An example IOC is provided under `iocs/loveExIOC/`. See the startup
+scripts in `iocs/loveExIOC/iocBoot/ioclove/` for complete Linux and
+vxWorks examples.
 
-Overview
---------
+## Database
 
-This module is part of synApps to provide support for the Love Controllers. It consists of MEDM screens, an Asyn-based multi device port driver, and a database. The MEDM screens provide a way for viewing the controller values as well as controlling some of its configuration. The port driver binds generic Asyn device support for EPICS records with the Asyn serial port driver (drvAsynSerialPort). The database defines EPICS records, that read/write controller values and configuration settings.  
-  
-The Love Controller is an instrument that can be used to monitor temperature, pressure, serve as a thermocouple, or control pressure, flow, humidity, motion, or pH given the proper hardware. The control functions, such as selecting the input type (voltage, current, etc.), are programmed from the front panel. Communication with the controller is a half-duplex, multi drop, RS-485 serial bus. Refer to the documentation for additional information about the features and programmability of the instrument. There are several controller models available providing different options and features, however, this software supports models 16A and 1600.
+The database consists of records for reading and controlling values on
+the Love controllers. Two database files are provided:
 
-* * *
+| File | Description |
+| - | - |
+| `LoveController.db` | Read-back records: value, set points, alarm limits, peak, valley, communication status |
+| `LoveControllerControl.db` | Configuration records: set point and alarm limit adjustment |
 
-Files
------
+Both files use the following macros:
 
-The files listed below are the primary ones in the identified directory.
+| Macro | Description |
+| - | - |
+| `P` | PV prefix (e.g., `ioc:`) |
+| `Q` | Controller instance qualifier (e.g., `Love1:`) |
+| `PORT` | Love driver asyn port name |
+| `ADDR` | Controller address (hex) |
 
+Records are organized into three categories:
 
-* start\_epics\_love - Main MEDM screen startup.
- 
-* ./docs
+- **Base records** read integer values directly from the controller
+  (decimal points, set points, alarm limits, status).
+- **Composite records** (calc records) combine base record values to
+  produce floating-point representations. For example, a set point
+  calc record uses the decimal points value and the raw set point
+  integer to compute the actual set point.
+- **Fanout records** drive the processing rate of the base and
+  composite records. Two fanout records provide fast and slow
+  processing rates, adjustable from the MEDM screens.
 
-    * devAsynLoveCrossTraining.ppt - Power point presentation given during a BCDA group meeting.
+{: .important}
+> The `getDecpts` PV must remain in the fast fanout record at all
+> times. This value is required by many PVs to derive their
+> floating-point values.
 
-    * devAsynLove.ppt - Power point presentation given during the EPICS collaboration meeting in Spring of 2005 ([click here](http://www-ssrl.slac.stanford.edu/lcls/epics/agenda.php)).
+A save/restore request file (`Love_settings.req`) is also provided
+for use with autosave.
 
-    * loveDriver.md - This document.
+## Operator Screens
 
-    * loveKnownIssues.md - List of known issues for each release.
+The module includes operator interface screens in three formats:
+MEDM (`.adl`), CSS-BOY (`.opi`), and caQtDM (`.ui`).
 
-    * loveReleaseNotes.html - Notes for current and previous releases.
+The main controller screen displays read-back values, set points,
+alarm limits, and alarm status. An ENABLE menu allows
+disabling/enabling record processing.
 
-    * WIRING - Diagram for wiring the controllers and other information.
- 
-* ./documentation/1600
+![Main controller screen](assets/LoveController.jpeg)
 
-    * 1600\_Calibration.pdf - Calibration document for the 1600.
+A hidden menu in the upper right corner of the main screen opens the
+control display, which shows additional values (input type,
+communication status) and allows adjustment of configuration
+parameters such as set point 1 and scan rate.
 
-    * 1600\_CommProtocol.pdf - Communication protocol/commands for the 1600.
+![Controller control screen](assets/LoveControllerControl.jpeg)
 
-    * 1600\_Documentation.pdf - Users manual.
-    
-* ./documentation/16A
+The "Fast Fanout" and "Slow Fanout" buttons launch screens that list
+the PVs being acquired and their processing rate. Users can add PVs
+or change the rate at runtime.
 
-    * 16A\_Calibration.pdf - Calibration document for the 16A.
+![Fast fanout screen](assets/LoveControllerFanout.jpeg)
 
-    * 16A\_CommDoc.pdf - Communication protocol/commands for the 16A.
+![Slow fanout screen](assets/LoveControllerSlowFanout.jpeg)
 
-    * 16A\_CommProtocol.pdf - Instructions about how to write your own application to communicate with the 16A.
+{: .note}
+> Changes made to fanout records at runtime are not preserved across
+> IOC reboots. Modify the database records directly to make permanent
+> changes.
 
-    * 16A\_DataSheet.pdf - General information.
+## Wiring
 
-    * 16A\_Documentation.pdf - Users manual.
+Communication with the controllers uses half-duplex RS-485. An
+RS-232 to RS-485 converter is required. See the
+[WIRING](https://github.com/epics-modules/love/blob/master/docs/WIRING)
+file for detailed pinout and wiring diagrams for a typical setup
+using the B&B Electronics 485LDRC converter.
 
-    * 16A\_FlowChart.pdf - Programming flow chart.
+## Files
 
-* ./documentation/485LDRC
+### Source
 
-    * 485LDRC\_Connections.gif - Wiring diagram.
+| File | Description |
+| - | - |
+| `loveApp/src/drvLove.c` | Asyn multi-device port driver |
+| `loveApp/src/devLove.dbd` | DBD file for importing Love support into other applications |
 
-    * 485LDRC\_Datasheet.pdf - General information.
+### Database
 
-    * 485LDRC\_Dimentions.gif - Installation diagram.
+| File | Description |
+| - | - |
+| `loveApp/Db/LoveController.db` | Read-back records |
+| `loveApp/Db/LoveControllerControl.db` | Configuration records |
+| `loveApp/Db/Love_settings.req` | Autosave request file |
 
-* ./iocBoot/ioclove
+### IOC Shell
 
-    * st.cmd.linux - Startup script for Linux-based IOCs.
+| File | Description |
+| - | - |
+| `loveApp/iocsh/love.iocsh` | Reusable iocsh snippet for configuring a controller instance |
 
-    * st.cmd.vx - Startup script for vxWorks-based IOCs.
+### Example IOC
 
-* ./loveApp/Db
+| File | Description |
+| - | - |
+| `iocs/loveExIOC/iocBoot/ioclove/st.cmd.linux` | Linux startup script |
+| `iocs/loveExIOC/iocBoot/ioclove/st.cmd.vx` | vxWorks startup script |
 
-    * LoveControllerControl.db - PVs for setting controller configuration.
+### Hardware Documentation
 
-    * LoveController.db - PVs for reading information from the controller.
-
-    * Love\_settings.req - Request file for auto save/restore.
-
-* ./loveApp/op/adl
-
-    * LoveController.adl - Main read back screen.
-
-    * LoveControllerControl.adl - Displays additional read back and configuration information.
-
-    * LoveControllerFanout.adl - Displays PV and rate information.
-
-* ./loveApp/src
-
-    * drvLove.c - Asyn-based multi device port driver.
-
-    * loveAppCommonInclude.dbd - Basic database definition from base, Asyn, and for Love controller support.
-
-    * loveAppInclude.dbd - Primary database definition file.
-
-    * loveAppVXInclude.dbd - vxWorks-specific database definition file.
-
-    * devLove.dbd - Necessary for other components to import Love Controller support.
-
-
-
-* * *
-
-MEDM Screens
-------------
-
-When the script 'start\_epics\_love' is executed, the main controller screen is displayed (see below). It displays the values that are of most interest to the user. These values include the read back, set points, alarm limits, and indicates whether the controller is in alarm. The 'ENABLE' menu provides a means for disabling/enabling record processing. When disabled the records will not be processed and no data acquisition will be performed.  
-  
-  
-
-![](LoveController.jpeg)  
-  
-A hidden menu is available in the upper right hand corner of the main screen. It displays additional values, such as input type and communication status, as well as allows one to make adjusts to some of the configuration parameters (i.e. set point 1 and scan rate). The display is illustrated below.  
-  
-  
-
-![](LoveControllerControl.jpeg)  
-  
-Additionally, the “Fast Fanout” or “Slow Fanout” message buttons launch other screens that list which PVs are being acquired and at what rate. The user can enter additional PVs or change the data acquisition rate. Furthermore, it should be noted that once the IOC is rebooted, the fanout records will be reset to the original PVs. These displays are illustrated below. The corresponding database records require modification to preserve any changes made at runtime.  
-  
-  
-  
-
-![](LoveControllerFanout.jpeg)  
-  
-
-![](LoveControllerSlowFanout.jpeg)  
-  
-  
-
-* * *
-
-drvLove
--------
-
-The drvLove is a multi device port driver that binds standard EPICS device support with the underlying serial bus. It allows a virtual connection to an individual controller to provide a means for debugging the communication. The asynRecord can be used to select the tracing masks for debugging communication.  
-  
-The driver implements the asynDrvUser, asynCommon, asynInt32, and asynUInt32Digital interfaces.
-
-*   asynDrvUser – Describes the methods to allow an asynUser to communicate user specific information to/from the port driver.
-    
-*   asynCommon – Describes the methods that must be implemented by drivers for reporting driver information and how to connect or disconnect from the driver.
-    
-*   asynInt32 – Describes the methods that use integers for communicating with a device.
-    
-*   asynUInt32Digital – Describes the methods for communicating via bits of an Int32 register.
-    
-
-* * *
-
-Database
---------
-
-  
-
-The database consists of records for processing data received by the controllers. Records are categorized as base, composite, and rate. Base records provide integer-based values that are read from a controller and include values such as the number of decimal points, set point 1 and 2, alarm high and low, and status. Composite records take as input base records to derive floating point representations of the values. For example, set point 1 is a calc record that receives as input the decimal points and the set point record values, then uses its CALC equation to determine the final floating point set point value. By default, both the base and composite records are process passive and are processed using fanout records. The fanout records are used to “drive” the processing rate of the base and composite records. At the moment there are two fanout records for fast and slow record processing, their scan rates can be adjusted from MEDM [screens](#Fanout) . **Note** that the “getDecpts” PV must be in the “Fast” fanout record at all times. This value is required since it is used by many PVs to derive their floating point value.
-
-* * *
-
-Operation
----------
-
-The driver is initialized during IOC startup by calling the drvLoveInit method passing the driver name (i.e. “LO”) and the name of the serial port. The initialization method first connects with the serial port name and finds the asynOctet interface. Then it registers the port driver name with Asyn and the interfaces it supports (i.e. asynDrvUser, asynCommon, asynInt32, and asynUInt32Digital). The port driver must be made aware of the controller models on the serial bus. To do this the startup script calls the drvLoveConfig method passing the port driver name (i.e. “LO”), the controller address (i.e. 1..256), and the controller model string (i.e. “16A” or “1600”). After this, the database can be loaded creating the record instances that support the controllers.  
-  
-Prior to initializing the driver, Asyn and the underlying serial bus must be initialized. Refer to the target-specific startup script located in the iocBoot directory for details related to initialization.
-
-* * *
-
-License Agreement
------------------
-
-Copyright (c) 2004 University of Chicago and the Regents of the University of
-California. All rights reserved.
-
-synApps is distributed subject to the following license conditions:
-SOFTWARE LICENSE AGREEMENT
-Software: synApps
-Versions: Release 4-5 and higher.
-
-   1. The "Software", below, refers to synApps (in either source code, or
-      binary form and accompanying documentation). Each licensee is addressed
-      as "you" or "Licensee."
-
-   2. The copyright holders shown above and their third-party licensor's hereby
-      grant Licensee a royalty-free nonexclusive license, subject to the
-      limitations stated herein and U.S. Government license rights.
-
-   3. You may modify and make a copy or copies of the Software for use within
-      your organization, if you meet the following conditions:
-         1. Copies in source code must include the copyright notice and this
-            Software License Agreement.
-         2. Copies in binary form must include the copyright notice and this
-            Software License Agreement in the documentation and/or other
-            materials provided with the copy.
-
-   4. You may modify a copy or copies of the Software or any portion of it, thus
-      forming a work based on the Software, and distribute copies of such work
-      outside your organization, if you meet all of the following conditions:
-         1. Copies in source code must include the copyright notice and this
-            Software License Agreement;
-         2. Copies in binary form must include the copyright notice and this
-            Software License Agreement in the documentation and/or other
-            materials provided with the copy;
-         3. Modified copies and works based on the Software must carry
-            prominent notices stating that you changed specified portions of
-            the Software.
-
-   5. Portions of the Software resulted from work developed under a
-      U.S. Government contract and are subject to the following license:
-      the Government is granted for itself and others acting on its behalf a
-      paid-up, nonexclusive, irrevocable worldwide license in this computer
-      software to reproduce, prepare derivative works, and perform publicly and
-      display publicly.
-
-   6. WARRANTY DISCLAIMER. THE SOFTWARE IS SUPPLIED "AS IS" WITHOUT WARRANTY OF
-      ANY KIND. THE COPYRIGHT HOLDERS, THEIR THIRD PARTY LICENSORS, THE UNITED
-      STATES, THE UNITED STATES DEPARTMENT OF ENERGY, AND THEIR EMPLOYEES: (1)
-      DISCLAIM ANY WARRANTIES, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
-      ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
-      PURPOSE, TITLE OR NON-INFRINGEMENT, (2) DO NOT ASSUME ANY LEGAL LIABILITY
-      OR RESPONSIBILITY FOR THE ACCURACY, COMPLETENESS, OR USEFULNESS OF THE
-      SOFTWARE, (3) DO NOT REPRESENT THAT USE OF THE SOFTWARE WOULD NOT
-      INFRINGE PRIVATELY OWNED RIGHTS, (4) DO NOT WARRANT THAT THE SOFTWARE WILL
-      FUNCTION UNINTERRUPTED, THAT IT IS ERROR-FREE OR THAT ANY ERRORS WILL BE
-      CORRECTED.
-
-   7. LIMITATION OF LIABILITY. IN NO EVENT WILL THE COPYRIGHT HOLDERS, THEIR
-      THIRD PARTY LICENSORS, THE UNITED STATES, THE UNITED STATES DEPARTMENT OF
-      ENERGY, OR THEIR EMPLOYEES: BE LIABLE FOR ANY INDIRECT, INCIDENTAL,
-      CONSEQUENTIAL, SPECIAL OR PUNITIVE DAMAGES OF ANY KIND OR NATURE,
-      INCLUDING BUT NOT LIMITED TO LOSS OF PROFITS OR LOSS OF DATA, FOR ANY
-      REASON WHATSOEVER, WHETHER SUCH LIABILITY IS ASSERTED ON THE BASIS OF
-      CONTRACT, TORT (INCLUDING NEGLIGENCE OR STRICT LIABILITY), OR OTHERWISE,
-      EVEN IF ANY OF SAID PARTIES HAS BEEN WARNED OF THE POSSIBILITY OF SUCH
-      LOSS OR DAMAGES.
+| Directory | Contents |
+| - | - |
+| `docs/1600/` | Model 1600 user manual, communication protocol, calibration |
+| `docs/16A/` | Model 16A user manual, communication protocol, data sheet, calibration, flow chart |
+| `docs/485LDRC/` | RS-232 to RS-485 converter data sheet, wiring and installation diagrams |
